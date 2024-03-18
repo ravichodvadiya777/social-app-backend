@@ -5,7 +5,7 @@ export function home(req:Request, res:Response):void {
     return;
 }
 
-export function auth(req:Request, res:Response):void {
+export const auth = (req:Request, res:Response):void => {
     res.json({auth : "okkk"})
     return;
 }   
