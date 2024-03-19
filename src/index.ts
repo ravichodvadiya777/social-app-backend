@@ -1,9 +1,20 @@
+import "./helper/sendResponse"
 import express, {Express} from 'express';
-import router from './routes';
+import dotenv from 'dotenv';
+dotenv.config();
+import router from "./routes";
 const app:Express = express();
-const port = 3000;
-// const name = 'asf'
+const port = process.env.PORT || 3001;
 
+
+
+
+
+// config & db
+import connectDB from "./db/db";
+connectDB(); 
+
+app.use(express.json());
 app.use(router)
 
 app.listen(port, () => {
