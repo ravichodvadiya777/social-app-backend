@@ -4,6 +4,8 @@ import RefreshToken from "../model/refreshTokensModel";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
+
+// ========================================================== Start User Authentication Flow ==========================================================
 export async function addUser(req:Request, res:Response){
     try {
         const email = req.body.email;
@@ -46,8 +48,8 @@ export async function login(req:Request, res:Response) {
                 message : "Incorrect Password",
             });
         } else {
-            const accessToken = await user.generateAuthToken(process.env.JWT_EXPIRE_IN); // 5 mini
-            const refreshToken = await user.generateAuthToken(); // main
+            const accessToken: string = await user.generateAuthToken(process.env.JWT_EXPIRE_IN); // 5 mini
+            const refreshToken: string = await user.generateAuthToken(); // main
             user._doc.accessToken = accessToken;
             await RefreshToken.create({
                 token : refreshToken,
@@ -91,3 +93,4 @@ export async function verifyToken(req:Request, res:Response){
         })
     }
 }
+// ========================================================== End User Authentication Flow ==========================================================
