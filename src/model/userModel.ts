@@ -1,10 +1,11 @@
 import mongoose  from 'mongoose';
 import jwt from "jsonwebtoken";
 
+export type UserRoles = "user" | 'admin'
 export type UserType ={
     name: string,
     dob: Date,
-    role: 'user'|'admin',
+    role: UserRoles,
     email: string,
     password: string,
     generateAuthToken: (expiresIn?: string) => Promise<string>,
@@ -12,13 +13,14 @@ export type UserType ={
         accessToken?: string
     },
     bio: string,
-    username: string
-
+    username: string,
+    _id : string
 }
 const UserModel = new mongoose.Schema<UserType>({
     username: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     name: {
         type: String,

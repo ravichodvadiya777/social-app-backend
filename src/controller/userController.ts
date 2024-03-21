@@ -1,9 +1,16 @@
 import { Request, Response } from "express";
 import User from "../model/userModel";
 import RefreshToken from "../model/refreshTokensModel";
+import {fileUploading} from "../middleware/fileUploading";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
+
+const fieldNames: string[] = [
+    "name",
+    "dob",
+    "email"
+]
 
 // ========================================================== Start User Authentication Flow ==========================================================
 export async function addUser(req:Request, res:Response){
@@ -11,25 +18,14 @@ export async function addUser(req:Request, res:Response){
         const email = req.body.email;
         const checkUser = await User.findOne({email : email});
         if (checkUser) {
-            return res.status(409).send({
-                code : 409,
-                message : "Email already in use",
-            });            
+            return global.sendResponse(res, 409, false, "Email already in use.");
         }
         req.body.password = await bcrypt.hash(req.body.password || null, 10);
         const addData = await User.create(req.body);
-        res.status(200).send({
-            code : 200,
-            message : "User add successfully",
-            data : addData
-        });
-        return;
+        return global.sendResponse(res, 201, true, "User add successfully.", addData);
     } catch (error) {
         console.log(error);
-        return res.status(400).send({
-            code : 400,
-            message : "Something not right, please try again.",
-        });
+        return global.sendResponse(res, 400, false, "Something not right, please try again.");
     }
 }
 
@@ -38,15 +34,9 @@ export async function login(req:Request, res:Response) {
         const {email, password} = req.body;
         const user = await User.findOne({email : email}).select("+password");
         if (!user) {
-            return res.status(404).send({
-                code : 404,
-                message : "Invalid Email",
-            });
+            return global.sendResponse(res, 404, false, "Invalid email");
         } else if (!await bcrypt.compare(password, user.password)) {
-            return res.status(401).send({
-                code : 401,
-                message : "Incorrect Password",
-            });
+            return global.sendResponse(res, 401, false, "Incorrect password");
         } else {
             const accessToken: string = await user.generateAuthToken(process.env.JWT_EXPIRE_IN); // 5 mini
             const refreshToken: string = await user.generateAuthToken(); // main
@@ -55,18 +45,11 @@ export async function login(req:Request, res:Response) {
                 token : refreshToken,
                 user : user._id
             });
-            return res.status(200).send({
-                code : 200,
-                message : 'Login Successfully',
-                data : user
-            })
+            return global.sendResponse(res, 200, true, "Login successfully", user);
         }
     } catch (error) {
         console.log(error);
-        return res.status(400).send({
-            code : 400,
-            message : "Something not right, please try again.",
-        });
+        return global.sendResponse(res, 400, false, "Something not right, please try again.");
     }
 }
 
@@ -74,23 +57,68 @@ export async function verifyToken(req:Request, res:Response){
     try {
         const token: string = req.body.token
         if(!token){
-            return res.status(401).send({
-                code : 401,
-                message : 'No Token Provided'
-            })
+            return global.sendResponse(res, 401, false, "No token provided.");
         } 
         jwt.verify(token, process.env.JWT_SECRET_KEY);
-        return res.status(200).send({
-            code : 200,
-            message : 'ok'
-        })
+        return global.sendResponse(res, 200, true, "Ok.");
     } catch (error) {
         console.log(error);
-        res.status(498).send({
-            code : 498,
-            message : 'Invalid token. Please try logging in again.',
-            data : {key : "logout"}
-        })
+        return global.sendResponse(res, 498, false, "Invalid token. Please try logging in again.",{key : "logout"});
     }
 }
 // ========================================================== End User Authentication Flow ==========================================================
+
+
+
+// ========================================================== Start User Profile Flow ==========================================================
+
+export async function getUserProfile(req:Request, res:Response){
+    try {
+        let userId  = req.query.id;
+        if(!userId){userId = req.user._id}
+        const user = await User.findById(userId);
+        return global.sendResponse(res, 200, true, "Get user profile.",user);
+    } catch (error) {
+        console.log(error);
+        return global.sendResponse(res, 400, false, "Something not right, please try again.");
+    }
+}
+
+export async function editUserProfile(req:Request, res:Response){
+    try {
+        const userId = req.params.id;
+        if(userId !== req.user._id.toString()){
+            return global.sendResponse(res, 403, false, "Not authorized to access this route.");
+        }
+        fieldNames.forEach((field) => {
+            if (req.body[field] != null) req.user[field] = req.body[field];
+        });
+
+        await User.updateOne({ _id: userId }, res.record, { new: true }).then(()=>{
+            return global.sendResponse(res, 200, true,"Edit success!");
+        }).catch((err)=>console.log(err)); 
+    } catch (error) {
+        console.log(error);
+        return global.sendResponse(res, 400, false, "Something not right, please try again.");
+    }
+}
+
+export async function fileUpload(req:Request, res:Response){
+    try {
+        const photos:object | object[] = req.files.file;
+        const url: string[] = [];
+        if (Array.isArray(photos)) {
+            for(const file of photos){
+                const path = await fileUploading(file);
+                url.push(path as string);
+            }
+        } 
+        return global.sendResponse(res, 200, true,"File upload success!",url);
+    } catch (error) {
+        console.log(error);
+        return global.sendResponse(res, 400, false, "Something not right, please try again.");
+    }
+}
+
+// ========================================================== End User Profile Flow ==========================================================
+
