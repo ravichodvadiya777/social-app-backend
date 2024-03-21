@@ -14,6 +14,9 @@ const postFieldName: string[] = [
 export async function createPost(req:Request, res:Response){
     try {
         const {title, description, photos} = req.body
+        if(!req.user){
+            return global.sendResponse(res, 403, false, "Not authorized to access this route.");
+        }
         const post = await Post.create({
             user : req.user._id,
             title : title,
@@ -30,12 +33,17 @@ export async function createPost(req:Request, res:Response){
 export async function editPost(req:Request, res:Response){
     try {
         const postId = req.params.id;
-        if(res.record.user.toString() !== req.user._id.toString()){
+        if(!res.record?.user || !req.user?._id){
             return global.sendResponse(res, 403, false, "Not authorized to access this route.");
         }
+        if(res.record?.user.toString() !== req.user._id.toString()){
+            return global.sendResponse(res, 403, false, "Not authorized to access this route.");
+        }
+        
         postFieldName.forEach((field) => {
-            if (req.body[field] != null) res.record[field] = req.body[field];
+            if (req.body[field] != null && res.record) res.record[field] = req.body[field];
         });
+        
         
         await Post.updateOne({ _id: postId }, res.record, { new: true })
         return global.sendResponse(res, 200, true,"Edit success!");
@@ -49,8 +57,10 @@ export async function editPost(req:Request, res:Response){
 export async function deletePost(req:Request, res:Response){
     try {
         const postId = req.params.id;
-        if(res.record.user.toString() !== req.user._id.toString()){
-            return global.sendResponse(res, 403, false, "Not authorized to access this route.");
+        if(res.record?.user && req.user){
+            if(res.record.user.toString() !== req.user._id.toString()){
+                return global.sendResponse(res, 403, false, "Not authorized to access this route.");
+            }
         }
         await Post.findByIdAndDelete(postId);
         return global.sendResponse(res, 200,true,'Deleted Successfully');  

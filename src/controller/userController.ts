@@ -40,7 +40,9 @@ export async function login(req:Request, res:Response) {
         } else {
             const accessToken: string = await user.generateAuthToken(process.env.JWT_EXPIRE_IN); // 5 mini
             const refreshToken: string = await user.generateAuthToken(); // main
-            user._doc.accessToken = accessToken;
+            if(user._doc){
+                user._doc.accessToken = accessToken;
+            }
             await RefreshToken.create({
                 token : refreshToken,
                 user : user._id
@@ -75,7 +77,12 @@ export async function verifyToken(req:Request, res:Response){
 export async function getUserProfile(req:Request, res:Response){
     try {
         let userId  = req.query.id;
-        if(!userId){userId = req.user._id}
+        if(!userId){
+            if(req.user){
+                userId = req.user._id
+            }
+        }
+
         const user = await User.findById(userId);
         return global.sendResponse(res, 200, true, "Get user profile.",user);
     } catch (error) {
@@ -87,11 +94,13 @@ export async function getUserProfile(req:Request, res:Response){
 export async function editUserProfile(req:Request, res:Response){
     try {
         const userId = req.params.id;
-        if(userId !== req.user._id.toString()){
-            return global.sendResponse(res, 403, false, "Not authorized to access this route.");
+        if(req.user){
+            if(userId !== req.user._id.toString()){
+                return global.sendResponse(res, 403, false, "Not authorized to access this route.");
+            }
         }
         fieldNames.forEach((field) => {
-            if (req.body[field] != null) req.user[field] = req.body[field];
+            if (req.body[field] != null && req.user) req.user[field] = req.body[field];
         });
 
         await User.updateOne({ _id: userId }, res.record, { new: true }).then(()=>{
@@ -105,7 +114,7 @@ export async function editUserProfile(req:Request, res:Response){
 
 export async function fileUpload(req:Request, res:Response){
     try {
-        const photos:object | object[] = req.files.file;
+        const photos:object | object[] | undefined = req.files ? req.files.file : undefined;
         const url: string[] = [];
         if (Array.isArray(photos)) {
             for(const file of photos){

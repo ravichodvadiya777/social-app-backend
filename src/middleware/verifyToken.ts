@@ -26,8 +26,9 @@ export function authenticateToken(req: Request, res: Response, next: NextFunctio
 // Grant access to specific roles with admin / user / employee
 export function auth(roles: UserRoles[]){
   return (req: Request, res: Response, next: NextFunction) => {
-    if (!roles.includes(req.user.role)) {
-      return next(global.sendResponse(res, 403, false, `User role ${req?.user.role} is not authorized to access this route`));
+    const role = req.user?.role
+        if (role && !roles.includes(role)) {
+      return next(global.sendResponse(res, 403, false, `User role ${req?.user?.role} is not authorized to access this route`));
     }
     next();
   };
