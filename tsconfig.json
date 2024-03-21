@@ -1,14 +1,15 @@
 {
-    "compilerOptions": {
-      "module": "commonjs",
-      "esModuleInterop": true,
-      "target": "es6",
-      "moduleResolution": "node",
-      "sourceMap": true,
-      "outDir": "dist",
-         /* extend types */
-      "typeRoots": ["./types"]
-    },
-    "include": ["src/**/*.ts"],
-    "lib": ["es2015"]
-  }
+  "compilerOptions": {
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "target": "es6",
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "outDir": "dist",
+    /* extend types */
+    "typeRoots": ["./src/types"]
+  },
+  "include": ["src/**/*.ts"],
+  "files": ["./src/types/global.d.ts"],
+  "lib": ["es2015"]
+}
