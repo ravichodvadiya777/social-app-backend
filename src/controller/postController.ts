@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
-import Post from "../model/postModel";
+// import Post from "../model/postModel";
+import postHelper from "../db/postHelper";
+import {Types} from "mongoose";
 
 
 
@@ -10,6 +12,19 @@ const postFieldName: string[] = [
     "photos"
 ]
 
+export async function dbHelp(req:Request, res:Response){
+    try {
+        const postId = req.query.id
+        const post = await postHelper.findOne({_id : postId});
+        return global.sendResponse(res, 200, true, "Get post successfully.",post);
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+
+
+
 // ========================================================== Start Post Flow ==========================================================
 export async function createPost(req:Request, res:Response){
     try {
@@ -17,12 +32,13 @@ export async function createPost(req:Request, res:Response){
         if(!req.user){
             return global.sendResponse(res, 403, false, "Not authorized to access this route.");
         }
-        const post = await Post.create({
+        const obj = {
             user : req.user._id,
             title : title,
             description : description,
             photos : photos
-        });
+        }
+        const post = await postHelper.insertOne(obj);
         return global.sendResponse(res, 201, true, "Post create successfully.", post);
     } catch (error) {
         console.log(error);
@@ -32,7 +48,7 @@ export async function createPost(req:Request, res:Response){
 
 export async function editPost(req:Request, res:Response){
     try {
-        const postId = req.params.id;
+        const postId = req.params.id
         if(!res.record?.user || !req.user?._id){
             return global.sendResponse(res, 403, false, "Not authorized to access this route.");
         }
@@ -45,7 +61,8 @@ export async function editPost(req:Request, res:Response){
         });
         
         
-        await Post.updateOne({ _id: postId }, res.record, { new: true })
+        // await Post.updateOne({ _id: postId }, res.record, { new: true })
+        await postHelper.updateOne({ _id: postId },res.record, { new: true });
         return global.sendResponse(res, 200, true,"Edit success!");
         
     } catch (error) {
@@ -56,13 +73,14 @@ export async function editPost(req:Request, res:Response){
 
 export async function deletePost(req:Request, res:Response){
     try {
-        const postId = req.params.id;
+        const postId = req.params.id
         if(res.record?.user && req.user){
             if(res.record.user.toString() !== req.user._id.toString()){
                 return global.sendResponse(res, 403, false, "Not authorized to access this route.");
             }
         }
-        await Post.findByIdAndDelete(postId);
+        // await Post.findByIdAndDelete(postId);
+        await postHelper.delete({_id :  new Types.ObjectId(postId)}, {new : true});
         return global.sendResponse(res, 200,true,'Deleted Successfully');  
         
     } catch (error) {
