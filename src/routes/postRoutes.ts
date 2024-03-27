@@ -12,6 +12,8 @@ import Post from "../model/postModel";
 
 const router:Router = Router()
 
+
+
 // Post Routes
 router.post('/addPost', authenticateToken, auth(["user"]), createPost);
 router.patch('/editPost/:id', authenticateToken, auth(["user"]), getRecord(Post), editPost);

@@ -4,6 +4,7 @@ import RefreshToken from "../model/refreshTokensModel";
 import {fileUploading} from "../middleware/fileUploading";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import userHelper from "../db/userHelper";
 
 
 const fieldNames: string[] = [
@@ -15,13 +16,13 @@ const fieldNames: string[] = [
 // ========================================================== Start User Authentication Flow ==========================================================
 export async function addUser(req:Request, res:Response){
     try {
-        const email = req.body.email;
-        const checkUser = await User.findOne({email : email});
+        const email:string = req.body.email;
+        const checkUser = await userHelper.findOne({email : email});
         if (checkUser) {
             return global.sendResponse(res, 409, false, "Email already in use.");
         }
         req.body.password = await bcrypt.hash(req.body.password || null, 10);
-        const addData = await User.create(req.body);
+        const addData = await userHelper.insertOne(req.body);
         return global.sendResponse(res, 201, true, "User add successfully.", addData);
     } catch (error) {
         console.log(error);
@@ -32,12 +33,13 @@ export async function addUser(req:Request, res:Response){
 export async function login(req:Request, res:Response) {
     try {
         const {email, password} = req.body;
-        const user = await User.findOne({email : email}).select("+password");
+        const user = await userHelper.findOne({email : email}, "+password");
         if (!user) {
             return global.sendResponse(res, 404, false, "Invalid email");
         } else if (!await bcrypt.compare(password, user.password)) {
             return global.sendResponse(res, 401, false, "Incorrect password");
         } else {
+            user.password = undefined;
             const accessToken: string = await user.generateAuthToken(process.env.JWT_EXPIRE_IN); // 5 mini
             const refreshToken: string = await user.generateAuthToken(); // main
             if(user._doc){
@@ -47,6 +49,7 @@ export async function login(req:Request, res:Response) {
                 token : refreshToken,
                 user : user._id
             });
+        
             return global.sendResponse(res, 200, true, "Login successfully", user);
         }
     } catch (error) {
@@ -83,7 +86,7 @@ export async function getUserProfile(req:Request, res:Response){
             }
         }
 
-        const user = await User.findById(userId);
+        const user = await User.findOne({_id : userId});
         return global.sendResponse(res, 200, true, "Get user profile.",user);
     } catch (error) {
         console.log(error);
@@ -102,8 +105,8 @@ export async function editUserProfile(req:Request, res:Response){
         fieldNames.forEach((field) => {
             if (req.body[field] != null && req.user) req.user[field] = req.body[field];
         });
-
-        await User.updateOne({ _id: userId }, res.record, { new: true }).then(()=>{
+        
+        await userHelper.updateOne({ _id: userId }, req.user).then(()=>{
             return global.sendResponse(res, 200, true,"Edit success!");
         }).catch((err)=>console.log(err)); 
     } catch (error) {
@@ -112,6 +115,7 @@ export async function editUserProfile(req:Request, res:Response){
     }
 }
 
+// File uploding
 export async function fileUpload(req:Request, res:Response){
     try {
         const photos:object | object[] | undefined = req.files ? req.files.file : undefined;
