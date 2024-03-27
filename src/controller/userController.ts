@@ -16,7 +16,7 @@ const fieldNames: string[] = [
 // ========================================================== Start User Authentication Flow ==========================================================
 export async function addUser(req:Request, res:Response){
     try {
-        const email = req.body.email;
+        const email:string = req.body.email;
         const checkUser = await userHelper.findOne({email : email});
         if (checkUser) {
             return global.sendResponse(res, 409, false, "Email already in use.");
@@ -39,6 +39,7 @@ export async function login(req:Request, res:Response) {
         } else if (!await bcrypt.compare(password, user.password)) {
             return global.sendResponse(res, 401, false, "Incorrect password");
         } else {
+            user.password = undefined;
             const accessToken: string = await user.generateAuthToken(process.env.JWT_EXPIRE_IN); // 5 mini
             const refreshToken: string = await user.generateAuthToken(); // main
             if(user._doc){
@@ -48,6 +49,7 @@ export async function login(req:Request, res:Response) {
                 token : refreshToken,
                 user : user._id
             });
+        
             return global.sendResponse(res, 200, true, "Login successfully", user);
         }
     } catch (error) {

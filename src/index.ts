@@ -9,8 +9,8 @@ import cors from "cors";
 import fileUpload from "express-fileupload"
 
 // config & db
-import connectDB from "./db/db";
-connectDB(); 
+import "./db/db";
+
 
 app.use(cors());
 

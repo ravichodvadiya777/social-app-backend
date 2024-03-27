@@ -1,7 +1,7 @@
 import { Router } from "express";
 
 // import controller
-import { createPost, editPost, deletePost, dbHelp} from "../controller/postController";
+import { createPost, editPost, deletePost} from "../controller/postController";
 
 import {authenticateToken, auth} from "../middleware/verifyToken";
 
@@ -11,8 +11,6 @@ import Post from "../model/postModel";
 
 
 const router:Router = Router()
-
-router.post('/dbHelp', dbHelp);
 
 
 

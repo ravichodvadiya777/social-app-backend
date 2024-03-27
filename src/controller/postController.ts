@@ -12,16 +12,6 @@ const postFieldName: string[] = [
     "photos"
 ]
 
-export async function dbHelp(req:Request, res:Response){
-    try {
-        const postId = req.query.id
-        const post = await postHelper.findOne({_id : postId});
-        return global.sendResponse(res, 200, true, "Get post successfully.",post);
-    } catch (error) {
-        console.log(error)
-    }
-}
-
 
 
 
@@ -62,7 +52,7 @@ export async function editPost(req:Request, res:Response){
         
         
         // await Post.updateOne({ _id: postId }, res.record, { new: true })
-        await postHelper.updateOne({ _id: postId },res.record, { new: true });
+        await postHelper.updateOne({ _id : postId },res.record);
         return global.sendResponse(res, 200, true,"Edit success!");
         
     } catch (error) {
@@ -80,7 +70,7 @@ export async function deletePost(req:Request, res:Response){
             }
         }
         // await Post.findByIdAndDelete(postId);
-        await postHelper.delete({_id :  new Types.ObjectId(postId)}, {new : true});
+        await postHelper.delete({_id :  new Types.ObjectId(postId)});
         return global.sendResponse(res, 200,true,'Deleted Successfully');  
         
     } catch (error) {
