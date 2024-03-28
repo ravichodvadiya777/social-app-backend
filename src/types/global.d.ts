@@ -25,6 +25,7 @@ declare global {
     }
     interface Response {
       record?: {
+        postId: number;
         user? : Document,
         photos? : string[]
       }
