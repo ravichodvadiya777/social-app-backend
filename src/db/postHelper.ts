@@ -20,7 +20,7 @@ const userHelper = {
             const post = await queryBuilder.exec();
             return post;
         } catch (error) {
-            console.error('Error retrieving users:', error);
+            console.error('Error retrieving post:', error);
             throw error;
         }
     },
@@ -38,7 +38,7 @@ const userHelper = {
             
             return post;
         } catch (error) {
-            console.error('Error retrieving users:', error);
+            console.error('Error retrieving post:', error);
             throw error;
         }
     },
@@ -48,7 +48,7 @@ const userHelper = {
             const result = await Post.create(data);
             return result;
         } catch (error) {
-            console.error('Error adding user:', error);
+            console.error('Error adding post:', error);
             throw error;
         }
     },
@@ -59,7 +59,7 @@ const userHelper = {
             // const result = await mongoose.connection.collection(collectionName).updateMany(query, data, option);
             return result;
         } catch (error) {
-            console.error('Error adding user:', error);
+            console.error('Error updates post:', error);
             throw error;
         }
     },
@@ -69,7 +69,7 @@ const userHelper = {
             const result = await Post.updateOne(query,data,{new : true});
             return result;
         } catch (error) {
-            console.error('Error adding user:', error);
+            console.error('Error update post:', error);
             throw error;
         }
     },
@@ -79,7 +79,7 @@ const userHelper = {
             const result = await Post.deleteOne(query, {new : true});
             return result;
         } catch (error) {
-            console.error('Error adding user:', error);
+            console.error('Error deleting post:', error);
             throw error;
         }
     },

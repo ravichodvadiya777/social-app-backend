@@ -58,7 +58,7 @@ const userHelper = {
             const result = await User.updateMany(query,data,option);
             return result;
         } catch (error) {
-            console.error('Error adding user:', error);
+            console.error('Error update user:', error);
             throw error;
         }
     },
@@ -68,7 +68,7 @@ const userHelper = {
             const result = await User.updateOne(query,data);
             return result;
         } catch (error) {
-            console.error('Error adding user:', error);
+            console.error('Error update user:', error);
             throw error;
         }
     },
@@ -78,7 +78,7 @@ const userHelper = {
             const result = await User.deleteOne(query, {new : true});
             return result;
         } catch (error) {
-            console.error('Error adding user:', error);
+            console.error('Error deleting user:', error);
             throw error;
         }
     },
