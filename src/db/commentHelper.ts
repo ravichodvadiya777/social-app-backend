@@ -13,11 +13,11 @@ const commentHelper = {
                 queryBuilder = queryBuilder.select(select);
             }
             
-            const follow = await queryBuilder.exec();
+            const comment = await queryBuilder.exec();
             
-            return follow;
+            return comment;
         } catch (error) {
-            console.error('Error retrieving users:', error);
+            console.error('Error retrieving comments:', error);
             throw error;
         }
     },
@@ -27,7 +27,7 @@ const commentHelper = {
             const result = await Comment.create(data);
             return result;
         } catch (error) {
-            console.error('Error adding user:', error);
+            console.error('Error adding comments:', error);
             throw error;
         }
     },
@@ -37,7 +37,7 @@ const commentHelper = {
             const result = await Comment.deleteOne(query, {new : true});
             return result;
         } catch (error) {
-            console.error('Error adding user:', error);
+            console.error('Error deleting comment:', error);
             throw error;
         }
     },

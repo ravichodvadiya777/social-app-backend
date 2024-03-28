@@ -16,7 +16,7 @@ const followHelper = {
             
             return follow;
         } catch (error) {
-            console.error('Error retrieving users:', error);
+            console.error('Error retrieving follow:', error);
             throw error;
         }
     },
@@ -26,7 +26,7 @@ const followHelper = {
             const result = await Follow.create(data);
             return result;
         } catch (error) {
-            console.error('Error adding user:', error);
+            console.error('Error adding follow:', error);
             throw error;
         }
     },
@@ -36,7 +36,7 @@ const followHelper = {
             const result = await Follow.deleteOne(query, {new : true});
             return result;
         } catch (error) {
-            console.error('Error adding user:', error);
+            console.error('Error deleting follow:', error);
             throw error;
         }
     },

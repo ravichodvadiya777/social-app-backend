@@ -16,7 +16,7 @@ const likeHelper = {
             
             return follow;
         } catch (error) {
-            console.error('Error retrieving users:', error);
+            console.error('Error retrieving like:', error);
             throw error;
         }
     },
@@ -26,20 +26,10 @@ const likeHelper = {
             const result = await Like.create(data);
             return result;
         } catch (error) {
-            console.error('Error adding user:', error);
+            console.error('Error adding like:', error);
             throw error;
         }
     },
-
-    // delete: async (query: object) => {
-    //     try {
-    //         const result = await Follow.deleteOne(query, {new : true});
-    //         return result;
-    //     } catch (error) {
-    //         console.error('Error adding user:', error);
-    //         throw error;
-    //     }
-    // },
 
 };
 

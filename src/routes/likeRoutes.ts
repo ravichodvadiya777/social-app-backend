@@ -1,7 +1,7 @@
 import { Router } from "express";
 
 // import controller
-import {addComment} from "../controller/commentController";
+import {addLike} from "../controller/likeController";
 
 import {authenticateToken, auth} from "../middleware/verifyToken";
 
@@ -13,8 +13,6 @@ import {authenticateToken, auth} from "../middleware/verifyToken";
 
 const router:Router = Router()
 
-// Comment Routes
-router.post("/addComment", authenticateToken, auth(["user"]), addComment);
-// router.post("/addLike", authenticateToken, auth(["user"]), addLike);
+router.post("/addLike", authenticateToken, auth(["user"]), addLike);
 
 export default router
