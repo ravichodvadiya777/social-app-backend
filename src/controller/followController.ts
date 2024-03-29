@@ -17,7 +17,6 @@ export async function follow(req:Request, res:Response){
             user: userId,
             follow: followId,
         };
-        
         const alreadyFollow = await followHelper.findOne(obj);
         if(alreadyFollow) {return global.sendResponse(res, 409, false, "Already Followed");}
         
