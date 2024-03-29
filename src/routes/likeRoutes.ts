@@ -5,7 +5,9 @@ import {addLike} from "../controller/likeController";
 
 import {authenticateToken, auth} from "../middleware/verifyToken";
 
-import Schema from "../validationSchema/likeSchema"
+import Schema from "../validationSchema/likeSchema";
+
+import {validationSchema} from "../middleware/validation";
 
 // import {getRecord} from "../middleware/getRecord";
 
@@ -15,6 +17,6 @@ import Schema from "../validationSchema/likeSchema"
 
 const router:Router = Router()
 
-router.post("/addLike", Schema.addLike, authenticateToken, auth(["user"]), addLike);
+router.post("/addLike", Schema.addLike, validationSchema, authenticateToken, auth(["user"]), addLike);
 
 export default router

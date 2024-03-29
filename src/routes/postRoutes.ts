@@ -9,16 +9,16 @@ import {getRecord} from "../middleware/getRecord";
 
 import Post from "../model/postModel";
 
-import Schema from "../validationSchema/postSchema"
+import Schema from "../validationSchema/postSchema";
+
+import {validationSchema} from "../middleware/validation";
 
 
 const router:Router = Router()
 
-
-
 // Post Routes
-router.post('/addPost', Schema.createPost, authenticateToken, auth(["user"]), createPost);
-router.patch('/editPost/:id', Schema.editPost, authenticateToken, auth(["user"]), getRecord(Post), editPost);
-router.delete('/deletePost/:id', Schema.deletePost, authenticateToken, auth(["user"]), getRecord(Post), deletePost);
+router.post('/addPost', Schema.createPost, validationSchema, authenticateToken, auth(["user"]), createPost);
+router.patch('/editPost/:id', Schema.editPost, validationSchema, authenticateToken, auth(["user"]), getRecord(Post), editPost);
+router.delete('/deletePost/:id', Schema.deletePost, validationSchema, authenticateToken, auth(["user"]), getRecord(Post), deletePost);
 
 export default router

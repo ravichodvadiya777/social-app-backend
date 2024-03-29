@@ -7,6 +7,8 @@ import {authenticateToken, auth} from "../middleware/verifyToken";
 
 import Schema from "../validationSchema/commentSchema"
 
+import {validationSchema} from "../middleware/validation";
+
 // import {getRecord} from "../middleware/getRecord";
 
 // import Comment from "../model/commentModel";
@@ -16,6 +18,6 @@ import Schema from "../validationSchema/commentSchema"
 const router:Router = Router()
 
 // Comment Routes
-router.post("/addComment", Schema.addComment, authenticateToken, auth(["user"]), addComment);
+router.post("/addComment", Schema.addComment, validationSchema, authenticateToken, auth(["user"]), addComment);
 
 export default router
