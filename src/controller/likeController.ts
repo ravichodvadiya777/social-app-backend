@@ -3,9 +3,18 @@ import commentHelper from "../db/commentHelper";
 import {Types} from "mongoose";
 import {LikeType} from "../model/likeModel";
 import likeHelper from "../db/likeHelper";
+import {validationResult} from "express-validator";
 
 
 export async function addLike(req:Request, res:Response){
+    const errors = validationResult(req);
+
+    // check for param errors
+    if (!errors.isEmpty()) {
+        return global.sendResponse(res, 400, false, "Required params not found.", {
+            errors: errors.array(),
+          });
+    }
     try {
         const {postId, type, commentId } = req.body;
         const obj: LikeType = {

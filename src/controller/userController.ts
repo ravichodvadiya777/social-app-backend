@@ -5,6 +5,7 @@ import {fileUploading} from "../middleware/fileUploading";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import userHelper from "../db/userHelper";
+import {validationResult} from "express-validator";
 
 
 const fieldNames: string[] = [
@@ -15,6 +16,14 @@ const fieldNames: string[] = [
 
 // ========================================================== Start User Authentication Flow ==========================================================
 export async function addUser(req:Request, res:Response){
+    const errors = validationResult(req);
+
+    // check for param errors
+    if (!errors.isEmpty()) {
+        return global.sendResponse(res, 400, false, "Required params not found.", {
+            errors: errors.array(),
+          });
+    }
     try {
         const email:string = req.body.email;
         const checkUser = await userHelper.findOne({email : email});
@@ -31,6 +40,14 @@ export async function addUser(req:Request, res:Response){
 }
 
 export async function login(req:Request, res:Response) {
+    const errors = validationResult(req);
+
+    // check for param errors
+    if (!errors.isEmpty()) {
+        return global.sendResponse(res, 400, false, "Required params not found.", {
+            errors: errors.array(),
+          });
+    }
     try {
         const {email, password} = req.body;
         const user = await userHelper.findOne({email : email}, "+password");
@@ -78,6 +95,14 @@ export async function verifyToken(req:Request, res:Response){
 // ========================================================== Start User Profile Flow ==========================================================
 
 export async function getUserProfile(req:Request, res:Response){
+    const errors = validationResult(req);
+
+    // check for param errors
+    if (!errors.isEmpty()) {
+        return global.sendResponse(res, 400, false, "Required params not found.", {
+            errors: errors.array(),
+          });
+    }
     try {
         let userId  = req.query.id;
         if(!userId){
@@ -95,6 +120,14 @@ export async function getUserProfile(req:Request, res:Response){
 }
 
 export async function editUserProfile(req:Request, res:Response){
+    const errors = validationResult(req);
+
+    // check for param errors
+    if (!errors.isEmpty()) {
+        return global.sendResponse(res, 400, false, "Required params not found.", {
+            errors: errors.array(),
+          });
+    }
     try {
         const userId = req.params.id;
         if(req.user){

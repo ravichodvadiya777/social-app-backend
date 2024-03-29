@@ -13,13 +13,15 @@ const PostModel = new mongoose.Schema<PostType>({
         ref: "User"
     },
     title: {
-        type : String
+        type : String,
+        required: true
     },
     description: {
         type : String
     },
     photos: {
-        type: [String]
+        type: [String],
+        required: true
     }
 },
 { timestamps: true, versionKey: false }

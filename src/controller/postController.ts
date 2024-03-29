@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 // import Post from "../model/postModel";
 import postHelper from "../db/postHelper";
 import {Types} from "mongoose";
+import {validationResult} from "express-validator";
 
 
 
@@ -17,6 +18,14 @@ const postFieldName: string[] = [
 
 // ========================================================== Start Post Flow ==========================================================
 export async function createPost(req:Request, res:Response){
+    const errors = validationResult(req);
+
+    // check for param errors
+    if (!errors.isEmpty()) {
+        return global.sendResponse(res, 400, false, "Required params not found.", {
+            errors: errors.array(),
+          });
+    }
     try {
         const {title, description, photos} = req.body
         if(!req.user){
@@ -37,6 +46,14 @@ export async function createPost(req:Request, res:Response){
 }
 
 export async function editPost(req:Request, res:Response){
+    const errors = validationResult(req);
+
+    // check for param errors
+    if (!errors.isEmpty()) {
+        return global.sendResponse(res, 400, false, "Required params not found.", {
+            errors: errors.array(),
+        });
+    }
     try {
         const postId = req.params.id
         if(!res.record?.user || !req.user?._id){
@@ -62,6 +79,14 @@ export async function editPost(req:Request, res:Response){
 }
 
 export async function deletePost(req:Request, res:Response){
+    const errors = validationResult(req);
+
+    // check for param errors
+    if (!errors.isEmpty()) {
+        return global.sendResponse(res, 400, false, "Required params not found.", {
+            errors: errors.array(),
+        });
+    }
     try {
         const postId = req.params.id
         if(res.record?.user && req.user){

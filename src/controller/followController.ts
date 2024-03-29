@@ -3,12 +3,21 @@ import { Request, Response } from "express";
 import followHelper from "../db/followHelper";
 import {Types} from "mongoose";
 import {FollowType} from "../model/followModel";
+import {validationResult} from "express-validator";
 
 
 
 // ========================================================== Start follow Flow ==========================================================
 // follow
 export async function follow(req:Request, res:Response){
+    const errors = validationResult(req);
+
+    // check for param errors
+    if (!errors.isEmpty()) {
+        return global.sendResponse(res, 400, false, "Required params not found.", {
+            errors: errors.array(),
+        });
+    }
     try {
         const userId = new Types.ObjectId(req.user._id);
         const followId = new Types.ObjectId(req.body.follow);
@@ -36,6 +45,14 @@ export async function follow(req:Request, res:Response){
 
 // unfollow
 export async function unfollow(req:Request, res:Response){
+    const errors = validationResult(req);
+
+    // check for param errors
+    if (!errors.isEmpty()) {
+        return global.sendResponse(res, 400, false, "Required params not found.", {
+            errors: errors.array(),
+        });
+    }
     try {
         const userId = new Types.ObjectId(req.user._id);
         const followId = new Types.ObjectId(req.body.follow);
