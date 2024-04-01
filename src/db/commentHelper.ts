@@ -62,6 +62,69 @@ const commentHelper = {
         }
     },
 
+    getCommentByPostId: async (postId : Types.ObjectId, userId: Types.ObjectId) => {
+        try {
+            const comment = await Comment.aggregate(
+                [
+                    {
+                      '$match': {
+                        'postId': postId
+                      }
+                    }, {
+                      '$lookup': {
+                        'from': 'likes', 
+                        'localField': '_id', 
+                        'foreignField': 'itemId', 
+                        'as': 'like'
+                      }
+                    }, {
+                      '$addFields': {
+                        'like': {
+                          '$map': {
+                            'input': '$like', 
+                            'as': 'likeItem', 
+                            'in': {
+                              '$mergeObjects': [
+                                '$$likeItem', {
+                                  'liked': {
+                                    '$cond': [
+                                      {
+                                        '$eq': [
+                                          '$$likeItem.user', userId
+                                        ]
+                                      }, true, false
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }, {
+                      '$addFields': {
+                        'like': {
+                          '$reduce': {
+                            'input': '$like', 
+                            'initialValue': false, 
+                            'in': {
+                              '$or': [
+                                '$$value', '$$this.liked'
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+            );
+            return comment;
+        } catch (error) {
+            console.error('Error retrieving comment:', error);
+            throw error;
+        }
+    }
+
 };
 
 export default commentHelper;
