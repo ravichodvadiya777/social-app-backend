@@ -1,4 +1,5 @@
 // /* eslint-disable no-unused-vars */
+import {  Types } from "mongoose";
 import { UserType } from "../model/userModel";
 
 declare global {
@@ -27,7 +28,8 @@ declare global {
       record?: {
         postId: number;
         user? : Document,
-        photos? : string[]
+        photos? : string[],
+        _id? : Types.ObjectId
       }
     }
   }
