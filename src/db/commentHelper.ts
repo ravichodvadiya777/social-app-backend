@@ -4,6 +4,26 @@ import {CommentType} from "../model/commentModel";
 
 // Define helper functions to interact with the database
 const commentHelper = {
+    // find
+    find: async (query?: {postId : Types.ObjectId}, select?: string, sort: string = "createdAt" ) => {
+        try {
+            let queryBuilder = Comment.find(query);
+            
+            if(select) {
+                queryBuilder = queryBuilder.select(select);
+            }
+            if(sort) {
+                queryBuilder = queryBuilder.sort(sort);
+            }
+            
+            const comment = await queryBuilder.exec();
+            return comment;
+        } catch (error) {
+            console.error('Error retrieving comment:', error);
+            throw error;
+        }
+    },
+
     // FindOne
     findOne: async (query?: {_id? : Types.ObjectId}, select?: string) => {
         try {
