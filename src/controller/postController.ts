@@ -36,6 +36,28 @@ export async function createPost(req:Request, res:Response){
     }
 }
 
+export async function getPostById(req:Request, res:Response){
+    try {
+        const postId = new Types.ObjectId(req.params.id);
+        // console.log(postId);
+        const post = await postHelper.findOne({_id : postId});
+        return global.sendResponse(res, 200, true, "Get Post successfully.", post);
+    } catch (error) {
+        console.log(error);
+        return global.sendResponse(res, 400, false, "Something not right, please try again.");   
+    }
+}
+
+export async function getAllPost(req:Request, res:Response){
+    try {
+        const post = await postHelper.getAllPost()
+        return global.sendResponse(res, 200, true, "Get Post successfully.", post);
+    } catch (error) {
+        console.log(error);
+        return global.sendResponse(res, 400, false, "Something not right, please try again.");   
+    }
+}
+
 export async function editPost(req:Request, res:Response){
     try {
         const postId = req.params.id

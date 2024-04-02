@@ -1,5 +1,5 @@
 // import connectDB from "./db";
-import { ObjectId } from "mongoose";
+import { ObjectId, Types } from "mongoose";
 import Post from "../model/postModel";
 import {PostType} from "../model/postModel";
 
@@ -26,7 +26,7 @@ const userHelper = {
     },
 
     // FindOne
-    findOne: async (query?: PostType, select?: string) => {
+    findOne: async (query?: {_id : Types.ObjectId}, select?: string) => {
         try {
             let queryBuilder = Post.findOne(query);
             
@@ -83,6 +83,42 @@ const userHelper = {
             throw error;
         }
     },
+
+    getAllPost: async () => {
+        try {
+            const post = await Post.aggregate([
+                {
+                  '$lookup': {
+                    'from': 'likes', 
+                    'localField': '_id', 
+                    'foreignField': 'postId', 
+                    'as': 'like'
+                  }
+                }, 
+                {
+                  '$lookup': {
+                    'from': 'comments', 
+                    'localField': '_id', 
+                    'foreignField': 'postId', 
+                    'as': 'comment'
+                  }
+                }, 
+                {
+                  '$addFields': {
+                    'like': {
+                      '$size': '$like'
+                    }, 
+                    'comment': {
+                      '$size': '$comment'
+                    }
+                  }
+                }
+              ]);
+            return post;
+        } catch (error) {
+            console.log('Error retrieving post:', error);
+        }
+    }
 
 };
 

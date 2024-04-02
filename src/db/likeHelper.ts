@@ -1,5 +1,6 @@
 import Like from "../model/likeModel";
 import {LikeType} from "../model/likeModel";
+import { Types } from "mongoose";
 
 // Define helper functions to interact with the database
 const likeHelper = {
@@ -30,6 +31,79 @@ const likeHelper = {
             throw error;
         }
     },
+
+    deleteOne: async (query: object) => {
+        try {
+            const result = await Like.deleteOne(query, {new : true});
+            return result;
+        } catch (error) {
+            console.error('Error deleting post:', error);
+            throw error;
+        }
+    },
+
+    getLikeById: async (itemId : Types.ObjectId, userId : Types.ObjectId) => {
+        try {
+            const like = await Like.aggregate(
+                [
+                    {
+                      '$match': {
+                        'itemId': itemId
+                      }
+                    }, 
+                    {
+                      '$lookup': {
+                        'from': 'follows', 
+                        'localField': 'user', 
+                        'foreignField': 'follow', 
+                        'pipeline': [
+                          {
+                            '$match': {
+                              'user': userId
+                            }
+                          }
+                        ], 
+                        'as': 'follow'
+                      }
+                    }, 
+                    {
+                      '$addFields': {
+                        'flag': {
+                          '$cond': {
+                            'if': {
+                              '$gt': [
+                                {
+                                  '$size': '$follow'
+                                }, 0
+                              ]
+                            }, 
+                            'then': 'following', 
+                            'else': {
+                              '$cond': {
+                                'if': {
+                                  '$eq': [
+                                    '$user', userId
+                                  ]
+                                }, 
+                                'then': 'loginUser', 
+                                'else': 'follow'
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                        '$unset' : "follow"
+                    }
+                  ]
+            );
+            return like;
+        } catch (error) {
+            console.error('Error retrieving like:', error);
+            throw error;
+        }
+    }
 
 };
 

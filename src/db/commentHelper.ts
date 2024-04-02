@@ -67,18 +67,29 @@ const commentHelper = {
             const comment = await Comment.aggregate(
                 [
                     {
-                      '$match': {
-                        'postId': postId
+                      $match: {
+                        'postId': postId,
+                        'commentId' : {$exists : false}
                       }
-                    }, {
-                      '$lookup': {
+                    },
+                    {
+                        $lookup: {
+                            'from': "comments",
+                            'localField': "_id",
+                            'foreignField': "commentId",
+                            'as': "comment"
+                        }
+                    } ,
+                    {
+                      $lookup: {
                         'from': 'likes', 
                         'localField': '_id', 
                         'foreignField': 'itemId', 
                         'as': 'like'
                       }
-                    }, {
-                      '$addFields': {
+                    }, 
+                    {
+                      $addFields: {
                         'like': {
                           '$map': {
                             'input': '$like', 
@@ -99,7 +110,8 @@ const commentHelper = {
                               ]
                             }
                           }
-                        }
+                        },
+                        comment : {$size : "$comment"}
                       }
                     }, {
                       '$addFields': {
@@ -121,6 +133,67 @@ const commentHelper = {
             return comment;
         } catch (error) {
             console.error('Error retrieving comment:', error);
+            throw error;
+        }
+    },
+
+    getSubCommentByCommentId: async (commentId : Types.ObjectId, userId: Types.ObjectId) => {
+        try {
+            const subComment = await Comment.aggregate([
+                {
+                  '$match': {
+                    'commentId': commentId
+                  }
+                }, {
+                  '$lookup': {
+                    'from': 'likes', 
+                    'localField': '_id', 
+                    'foreignField': 'itemId', 
+                    'as': 'like'
+                  }
+                }, {
+                  '$addFields': {
+                    'like': {
+                      '$map': {
+                        'input': '$like', 
+                        'as': 'likeItem', 
+                        'in': {
+                          '$mergeObjects': [
+                            '$$likeItem', {
+                              'liked': {
+                                '$cond': [
+                                  {
+                                    '$eq': [
+                                      '$$likeItem.user', userId
+                                    ]
+                                  }, true, false
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }, {
+                  '$addFields': {
+                    'like': {
+                      '$reduce': {
+                        'input': '$like', 
+                        'initialValue': false, 
+                        'in': {
+                          '$or': [
+                            '$$value', '$$this.liked'
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              ])
+              return subComment;
+        } catch (error) {
+            console.error('Error retrieving subComment:', error);
             throw error;
         }
     }

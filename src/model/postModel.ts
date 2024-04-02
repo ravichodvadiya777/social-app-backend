@@ -5,6 +5,7 @@ export type PostType ={
     title: string,
     description: string,
     photos: string[],
+    // _id? : Types.ObjectId | SchemaDefinitionProperty<ObjectId, PostType>,
 }
 const PostModel = new mongoose.Schema<PostType>({
     user: {

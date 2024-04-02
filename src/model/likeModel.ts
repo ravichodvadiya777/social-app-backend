@@ -1,4 +1,4 @@
-import mongoose, { ObjectId, Types, SchemaDefinitionProperty, Schema }  from 'mongoose';
+import mongoose, { ObjectId, Types, SchemaDefinitionProperty }  from 'mongoose';
 
 export type LikeType ={
     user: Types.ObjectId | SchemaDefinitionProperty<ObjectId, LikeType>,
@@ -22,7 +22,7 @@ const LikeModel = new mongoose.Schema<LikeType>({
     },
     type: {
         type : Number,
-        enum : [1,2,3], //1:post , 2:comment, 3:story
+        enum : [1,2,3], //1:post , 2:comment, 3:subComment
     }
 },
 { timestamps: true, versionKey: false }
