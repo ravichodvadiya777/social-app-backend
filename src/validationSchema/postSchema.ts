@@ -7,6 +7,10 @@ const Schema = {
         check("title").notEmpty().withMessage("Title is a required field"),
         check("photos").notEmpty().withMessage("Photos is a required field"),
     ],
+    
+    getPostById : [
+        param("id").notEmpty().withMessage("id is a required field"),
+    ],
 
     editPost : [
         param("id").notEmpty().withMessage("id is a required field"),

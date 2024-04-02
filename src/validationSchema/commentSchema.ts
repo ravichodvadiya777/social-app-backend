@@ -14,6 +14,14 @@ const Schema = {
         .isMongoId().withMessage('provide valid id')
         .isString().withMessage('id must be a string')
         .isLength({ min: 24, max: 24 }).withMessage('id must be 24 characters long')
+    ],
+
+    getSubCommentByCommentId : [
+        param('id')
+        .notEmpty().withMessage('id is a required field')
+        .isMongoId().withMessage('provide valid id')
+        .isString().withMessage('id must be a string')
+        .isLength({ min: 24, max: 24 }).withMessage('id must be 24 characters long')
     ]    
 };
 
