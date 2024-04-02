@@ -5,7 +5,7 @@ import {addComment, getCommentByPostId, getSubCommentByCommentId} from "../contr
 
 import {authenticateToken, auth} from "../middleware/verifyToken";
 
-import Schema from "../validationSchema/commentSchema"
+import Schema from "../validationSchema/commentSchema";
 
 import {validationSchema} from "../middleware/validation";
 
@@ -24,7 +24,7 @@ router.get("/getCommentByPostId/:id", Schema.getCommentByPostId, validationSchem
 
 router.get("/getSubCommentByCommentId/:id", Schema.getSubCommentByCommentId, validationSchema, authenticateToken, auth(["user"]), getRecord(Comment), getSubCommentByCommentId);
 
-router.post("/addComment", Schema.addComment, validationSchema, authenticateToken, auth(["user"]), addComment);
+router.post("/", Schema.addComment, validationSchema, authenticateToken, auth(["user"]), addComment);
 
 
 export default router

@@ -17,10 +17,10 @@ import {validationSchema} from "../middleware/validation";
 const router:Router = Router()
 
 // Post Routes
-router.post('/addPost', Schema.createPost, validationSchema, authenticateToken, auth(["user"]), createPost);
-router.get('/allPost', authenticateToken, auth(["user"]), getAllPost);
+router.post('/', Schema.createPost, validationSchema, authenticateToken, auth(["user"]), createPost);
+router.get('/', authenticateToken, auth(["user"]), getAllPost);
 router.get('/:id', Schema.getPostById, validationSchema, authenticateToken, auth(["user"]), getRecord(Post), getPostById);
-router.patch('/editPost/:id', Schema.editPost, validationSchema, authenticateToken, auth(["user"]), getRecord(Post), editPost);
-router.delete('/deletePost/:id', Schema.deletePost, validationSchema, authenticateToken, auth(["user"]), getRecord(Post), deletePost);
+router.patch('/:id', Schema.editPost, validationSchema, authenticateToken, auth(["user"]), getRecord(Post), editPost);
+router.delete('/:id', Schema.deletePost, validationSchema, authenticateToken, auth(["user"]), getRecord(Post), deletePost);
 
 export default router

@@ -17,9 +17,9 @@ import Like from "../model/likeModel";
 
 const router:Router = Router()
 
-router.post("/addLike", Schema.addLike, validationSchema, authenticateToken, auth(["user"]), addLike);
-router.delete("/unlike/:id", Schema.unlike, validationSchema, authenticateToken, auth(["user"]), getRecord(Like), unlike);
-router.get("/getLikeById/:id", Schema.getLikeById, validationSchema, authenticateToken, auth(["user"]), getLikeById);
+router.post("/", Schema.addLike, validationSchema, authenticateToken, auth(["user"]), addLike);
+router.delete("/:id", Schema.unlike, validationSchema, authenticateToken, auth(["user"]), getRecord(Like), unlike);
+router.get("/:id", Schema.getLikeById, validationSchema, authenticateToken, auth(["user"]), getLikeById);
 
 
 export default router

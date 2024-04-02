@@ -149,47 +149,21 @@ const commentHelper = {
                     'from': 'likes', 
                     'localField': '_id', 
                     'foreignField': 'itemId', 
-                    'as': 'like'
+                    'as': 'like',
+                    'pipeline':[{'$match':{'user': userId}}]
                   }
-                }, {
-                  '$addFields': {
+                },
+                {
+                  '$addFields':{
                     'like': {
-                      '$map': {
-                        'input': '$like', 
-                        'as': 'likeItem', 
-                        'in': {
-                          '$mergeObjects': [
-                            '$$likeItem', {
-                              'liked': {
-                                '$cond': [
-                                  {
-                                    '$eq': [
-                                      '$$likeItem.user', userId
-                                    ]
-                                  }, true, false
-                                ]
-                              }
-                            }
-                          ]
-                        }
-                      }
-                    }
+                      '$cond': [
+                        { '$eq': [{ '$size': "$like" }, 1] },
+                        true,
+                        false,
+                      ],
+                    },
                   }
-                }, {
-                  '$addFields': {
-                    'like': {
-                      '$reduce': {
-                        'input': '$like', 
-                        'initialValue': false, 
-                        'in': {
-                          '$or': [
-                            '$$value', '$$this.liked'
-                          ]
-                        }
-                      }
-                    }
-                  }
-                }
+                } 
               ])
               return subComment;
         } catch (error) {

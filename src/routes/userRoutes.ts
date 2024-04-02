@@ -13,13 +13,13 @@ import {validationSchema} from "../middleware/validation";
 const router:Router = Router()
 
 // Authentication  Routes
-router.post('/add', Schema.addUser, addUser);
+router.post('/', Schema.addUser, addUser);
 router.post('/login', Schema.login, login);
 router.post('/verifyToken', authenticateToken, auth(["user"]), verifyToken);
 
 // Profile Routes
 router.get('/', authenticateToken, validationSchema, auth(["user"]), getUserProfile);
-router.patch('/editUserProfile/:id', Schema.editUserProfile, validationSchema, authenticateToken, auth(["user"]), editUserProfile);
-router.post('/', authenticateToken, validationSchema, auth(["user"]), fileUpload);
+router.patch('/:id', Schema.editUserProfile, validationSchema, authenticateToken, auth(["user"]), editUserProfile);
+router.post('/fileUpload', authenticateToken, validationSchema, auth(["user"]), fileUpload);
 
 export default router
