@@ -1,12 +1,12 @@
 import { Request, Response } from "express";
-import User from "../model/userModel";
 import RefreshToken from "../model/refreshTokensModel";
 import { fileUploading } from "../middleware/fileUploading";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import userHelper from "../db/userHelper";
+import { Types } from "mongoose";
 
-const fieldNames: string[] = ["name", "dob", "email", "bio"];
+const fieldNames: string[] = ["name", "dob", "email", "bio", "country", "city", "address", "pincode"];
 
 // ========================================================== Start User Authentication Flow ==========================================================
 export async function addUser(req: Request, res: Response) {
@@ -113,7 +113,7 @@ export async function getUserProfile(req: Request, res: Response) {
       }
     }
 
-    const user = await User.findOne({ _id: userId });
+    const user = await userHelper.findOne({ _id : new Types.ObjectId(userId) });
     return global.sendResponse(res, 200, true, "Get user profile.", user);
   } catch (error) {
     console.log(error);
@@ -150,8 +150,10 @@ export async function editUserProfile(req: Request, res: Response) {
 
     await userHelper
       .updateOne({ _id: userId }, req.user)
-      .then(() => {
-        return global.sendResponse(res, 200, true, "Edit success!");
+      .then(async() => {
+        const user = await userHelper.findOne({_id : new Types.ObjectId(userId)});
+        // delete user.password;
+        return global.sendResponse(res, 200, true, "Edit success!", user);
       })
       .catch((err) => console.log(err));
   } catch (error) {
@@ -165,20 +167,29 @@ export async function editUserProfile(req: Request, res: Response) {
   }
 }
 
-// File uploding
-export async function fileUpload(req: Request, res: Response) {
+
+export async function changePassword(req: Request, res: Response) {
   try {
-    const photos: object | object[] | undefined = req.files
-      ? req.files.file
-      : undefined;
-    const url: string[] = [];
-    if (Array.isArray(photos)) {
-      for (const file of photos) {
-        const path = await fileUploading(file);
-        url.push(path as string);
-      }
+    console.log("innnn")
+    const {oldPassword, newPassword} = req.body;
+    const userId = req.user._id;
+    
+    const user = await userHelper.findOne({ _id: new Types.ObjectId(req.user._id) }, "+password");
+    
+    //Checking old password is correct or not
+    const checkOldPass = await bcrypt.compare(oldPassword, user.password);
+    
+    if (!checkOldPass) {
+      return global.sendResponse(res, 401, false, 'Wrong current Password');
     }
-    return global.sendResponse(res, 200, true, "File upload success!", url);
+
+    //Hashing the new password
+    const hashedPassword = await bcrypt.hash(newPassword || null, 10);
+
+    //Update the new password to database
+    await userHelper.updateOne({_id : userId},{password : hashedPassword})
+    return global.sendResponse(res,200, true,'Password has been changed successfully.');
+
   } catch (error) {
     console.log(error);
     return global.sendResponse(
@@ -190,4 +201,24 @@ export async function fileUpload(req: Request, res: Response) {
   }
 }
 
+
+export async function chekUserName(req: Request, res: Response) {
+  try {
+    const userName = req.query.userName.toString();
+    
+    const user = await userHelper.findOne({username : userName});
+    if(user){
+      return global.sendResponse(res,409,"Username already exists.",{userName : false})  
+    }
+    return global.sendResponse(res,200,"Ok.",{userName : true});
+  } catch (error) {
+    console.log(error);
+    return global.sendResponse(
+      res,
+      400,
+      false,
+      "Something not right, please try again."
+    );
+  }
+}
 // ========================================================== End User Profile Flow ==========================================================

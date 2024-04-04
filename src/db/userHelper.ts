@@ -1,6 +1,7 @@
 // import connectDB from "./db";
 import User from "../model/userModel";
 import { UserType } from "../model/userModel";
+import { Types } from "mongoose";
 
 // Ensure database connection is established before using helper functions
 // connectDB();
@@ -28,7 +29,7 @@ const userHelper = {
     },
 
     // FindOne
-    findOne: async (query?: {email?: string}, select?: string) => {
+    findOne: async (query?: {email?: string, _id? : Types.ObjectId, username? : string}, select?: string) => {
         try {
             let queryBuilder = User.findOne(query);
             
@@ -63,7 +64,7 @@ const userHelper = {
         }
     },
 
-    updateOne: async (query: {_id? : string}, data: {name? : string, dob? : Date, email? : string}) => {
+    updateOne: async (query: {_id? : string}, data: {name? : string, dob? : Date, email? : string, password? : string}) => {
         try {
             const result = await User.updateOne(query,data);
             return result;

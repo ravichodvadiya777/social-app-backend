@@ -15,7 +15,11 @@ export type UserType ={
     bio: string,
     username: string,
     _id : string,
-    profileImg: string | unknown
+    profileImg: string | unknown,
+    country: string,
+    city :  string,
+    address : string,
+    pincode : number
 }
 const UserModel = new mongoose.Schema<UserType>({
     username: {
@@ -53,6 +57,18 @@ const UserModel = new mongoose.Schema<UserType>({
     profileImg: {
         type: String,
         default : "https://img.freepik.com/premium-vector/user-profile-icon-flat-style-member-avatar-vector-illustration-isolated-background-human-permission-sign-business-concept_157943-15752.jpg"
+    },
+    country: {
+        type : String,
+    },
+    city: {
+        type : String
+    },
+    address: {
+        type: String
+    },
+    pincode: {
+        type : Number
     }
 },
 { timestamps: true, versionKey: false }
