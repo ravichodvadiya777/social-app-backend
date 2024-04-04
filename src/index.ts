@@ -7,6 +7,7 @@ const app:Express = express();
 const port = process.env.PORT || 3001;
 import cors from "cors";
 import fileUpload from "express-fileupload"
+import cookieParser from "cookie-parser";
 import http from "http"
 import socket  from "socket.io";
 import chetHelper from "./db/chatHelper";
@@ -14,8 +15,16 @@ import chetHelper from "./db/chatHelper";
 // config & db
 import "./db/db";
 
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3001",
+    ],
+    credentials: true,
+  })
+);
 
-app.use(cors());
+app.use(cookieParser());
 
 app.use(express.json());
 app.use(fileUpload({ limits: { fileSize: 50 * 1024 * 1024 } }));

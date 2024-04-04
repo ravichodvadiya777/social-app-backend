@@ -15,7 +15,7 @@ export type UserType ={
     bio: string,
     username: string,
     _id : string,
-    profileImg: string
+    profileImg: string | unknown
 }
 const UserModel = new mongoose.Schema<UserType>({
     username: {

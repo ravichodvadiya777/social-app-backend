@@ -8,6 +8,22 @@ import followRouter from "./routes/followRoutes";
 import commentRouter from "./routes/commentRoutes";
 import likeRouter from "./routes/likeRoutes";
 import chatRouter from "./routes/chatRoutes";
+import { refreshToken } from "./middleware/verifyToken";
+
+router.get("/refresh_token", async (req, res) => {
+  const token = req.cookies["socialApp"];
+  if (token) {
+    refreshToken(token, res);
+  } else {
+    global.sendResponse(
+      res,
+      400,
+      false,
+      "Your session expired, try to login.",
+      { key: "logout" }
+    );
+  }
+});
 
 router.use("/chat", chatRouter);
 router.use("/user", userRouter);
