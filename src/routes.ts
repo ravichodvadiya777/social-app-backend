@@ -11,7 +11,8 @@ import chatRouter from "./routes/chatRoutes";
 import { refreshToken } from "./middleware/verifyToken";
 
 router.get("/refresh_token", async (req, res) => {
-  const token = req.cookies["socialApp"];
+  const token = req.cookies["App"];
+  
   if (token) {
     refreshToken(token, res);
   } else {
