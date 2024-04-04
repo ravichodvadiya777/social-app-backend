@@ -18,7 +18,7 @@ router.post('/login', Schema.login, login);
 router.post('/verifyToken', authenticateToken, auth(["user"]), verifyToken);
 
 // Profile Routes
-router.get('/', authenticateToken, validationSchema, auth(["user"]), getUserProfile);
+router.get('/:id', authenticateToken, validationSchema, auth(["user"]), getUserProfile);
 router.patch('/:id', Schema.editUserProfile, validationSchema, authenticateToken, auth(["user"]), editUserProfile);
 router.post('/fileUpload', authenticateToken, validationSchema, auth(["user"]), fileUpload);
 

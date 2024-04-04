@@ -21,6 +21,7 @@ declare global {
      interface Request {
       user?: UserType,
       files?: {
+        profileImg: string;
         file? :  object | object[]
       }
     }
@@ -28,7 +29,7 @@ declare global {
       record?: {
         postId: number;
         user? : Document,
-        photos? : string[],
+        photos? : {url : string, type : string}[],
         _id? : Types.ObjectId
       }
     }

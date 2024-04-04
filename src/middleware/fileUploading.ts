@@ -1,44 +1,42 @@
 import { v2 as cloudinary } from "cloudinary";
-import  {promises as fs} from 'fs';
-import * as path from 'path';
-
-
+import { promises as fs } from "fs";
+import * as path from "path";
 
 cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 export const fileUploading = async (file) => {
-  console.log(file, "==========");
+  const tempFolderPath = path.resolve(__dirname, "..", "temp");
+
+  // Ensure the temporary folder exists
+  try {
+    await fs.access(tempFolderPath, fs.constants.F_OK);
+  } catch (err) {
+    if (err.code === "ENOENT") {
+      await fs.mkdir(tempFolderPath, { recursive: true });
+    } else {
+      throw new Error(`Error accessing temporary folder: ${err.message}`);
+    }
+  }
+
   try {
     const filename = path.join(
-      __dirname,
-      "../temp/" +
-        Date.now() +
-        "_" +
-        Math.ceil(Math.random() * 1e8) +
-        "." +
+      tempFolderPath,
+      `${Date.now()}_${Math.ceil(Math.random() * 1e8)}.${
         file.mimetype.split("/")[1]
+      }`
     );
     await fs.writeFile(filename, file.data);
-    return new Promise((resolve, reject) => {
-        cloudinary.uploader.upload(filename)
-            .then(async (data) => {
-                if (data) {
-                    await fs.unlink(filename);
-                    resolve(data.secure_url);
-                } else {
-                    reject(data);
-                }
-            })
-            .catch((error) => {
-                reject(error);
-            });
-    });
+
+    const data = await cloudinary.uploader.upload(filename);
+    await fs.unlink(filename);
+
+    return data.secure_url;
   } catch (error) {
-    console.log(error);
+    console.error(error);
     throw error;
   }
 };
