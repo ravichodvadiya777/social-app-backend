@@ -27,13 +27,6 @@ const Schema = {
 
     editUserProfile : [
         param("id").notEmpty().withMessage("id is a required field"),
-        check("name").notEmpty().withMessage("Name is a required field"),
-        // check("email")
-        //     .notEmpty()
-        //     .withMessage("Email is a required field")
-        //     .isLength({ min: 3, max: 84 })
-        //     .isEmail()
-        //     .withMessage("Enter an valid email address"),
     ],
 
     getUserProfile : [
@@ -46,8 +39,8 @@ const Schema = {
     ],
 
     chekUserName : [
-        query("userName").notEmpty().withMessage("UserName is a required field"),
-    ]
+        query("username").notEmpty().withMessage("UserName is a required field"),
+    ],
 
 };
 

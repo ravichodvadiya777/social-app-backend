@@ -6,7 +6,7 @@ import jwt from "jsonwebtoken";
 import userHelper from "../db/userHelper";
 import { Types } from "mongoose";
 
-const fieldNames: string[] = ["name", "dob", "email", "bio", "country", "city", "address", "pincode"];
+const fieldNames: string[] = ["name", "dob", "email", "bio", "country", "city", "address", "pincode", "username"];
 
 // ========================================================== Start User Authentication Flow ==========================================================
 export async function addUser(req: Request, res: Response) {
@@ -61,6 +61,10 @@ export async function login(req: Request, res: Response) {
           token: refreshToken,
           user: user._id,
         });
+      } else {
+        await RefreshToken.findByIdAndUpdate(alreadyRefreshToken._id, {
+          token: refreshToken,
+        });
       }
       res.cookie("App", refreshToken, {
         httpOnly: true,
@@ -81,6 +85,7 @@ export async function login(req: Request, res: Response) {
   }
 }
 
+// token verify 
 export async function verifyToken(req: Request, res: Response) {
   try {
     const token: string = req.body.token;
@@ -104,6 +109,8 @@ export async function verifyToken(req: Request, res: Response) {
 
 // ========================================================== Start User Profile Flow ==========================================================
 
+
+// Get user Profile
 export async function getUserProfile(req: Request, res: Response) {
   try {
     let userId = req.params.id;
@@ -126,6 +133,8 @@ export async function getUserProfile(req: Request, res: Response) {
   }
 }
 
+
+// edit user profile
 export async function editUserProfile(req: Request, res: Response) {
   try {
     const userId = req.params.id;
@@ -167,7 +176,7 @@ export async function editUserProfile(req: Request, res: Response) {
   }
 }
 
-
+// change password 
 export async function changePassword(req: Request, res: Response) {
   try {
     console.log("innnn")
@@ -201,16 +210,35 @@ export async function changePassword(req: Request, res: Response) {
   }
 }
 
-
+// check user name uniq or not
 export async function chekUserName(req: Request, res: Response) {
   try {
-    const userName = req.query.userName.toString();
+    const username = req.query.username.toString();
     
-    const user = await userHelper.findOne({username : userName});
+    const user = await userHelper.findOne({username : username});
     if(user){
-      return global.sendResponse(res,409,"Username already exists.",{userName : false})  
+      return global.sendResponse(res,200,true, "Username already exists.",{username : false})  
     }
-    return global.sendResponse(res,200,"Ok.",{userName : true});
+    return global.sendResponse(res,200,true, "Ok.",{username : true});
+  } catch (error) {
+    console.log(error);
+    return global.sendResponse(
+      res,
+      400,
+      false,
+      "Something not right, please try again."
+    );
+  }
+}
+
+// search by user name
+export async function searchByUserName(req: Request, res: Response) {
+  try {
+    let users = await  userHelper.find({username : { $regex: req.body.username, $options: "i" }}, "username", );
+    if(!req.body.username){
+      users = []
+    }
+    return global.sendResponse(res,200,"Search Successfully",users);
   } catch (error) {
     console.log(error);
     return global.sendResponse(

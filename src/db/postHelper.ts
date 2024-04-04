@@ -127,6 +127,24 @@ const postHelper = {
             as: "comment",
           },
         },
+        
+        {
+          $lookup : {
+            from: "users",
+            localField: "user",
+            foreignField: "_id",
+            as: "user",
+            pipeline : [{
+              $project : {
+               username : 1,
+              profileImg: 1,
+                city : 1,
+                country : 1,
+                mention : 1
+              }
+            }],
+          }
+        },
         {
           $addFields: {
             like: {
@@ -134,6 +152,65 @@ const postHelper = {
             },
             comment: {
               $size: "$comment",
+            },
+            user : {
+              $first : "$user"
+            }
+          },
+        },
+        {
+          $addFields: {
+            mentionIds: {
+              $map: {
+                input: "$mention",
+                as: "mentionId",
+                in: {
+                  $convert: {
+                    input: "$$mentionId",
+                    to: "objectId",
+                  },
+                },
+              },
+            },
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "mentionIds",
+            foreignField: "_id",
+            as: "mentionedUsers",
+            pipeline : [
+              {
+                $project : {
+                  username : 1,
+                  profileImg : 1,
+                  name : 1
+                }
+              }
+            ]
+          },
+        },
+        {
+          $group: {
+            _id: "$_id",
+            description: {
+              $last: "$description",
+            },
+            photos: {
+              $last: "$photos",
+            },
+            user: {
+              $last: "$user",
+            },
+            mentionedUsers: {
+              $last: "$mentionedUsers",
+            },
+            like: {
+              $last: "$like",
+            },
+            comment: {
+              $last: "$comment",
             },
           },
         },

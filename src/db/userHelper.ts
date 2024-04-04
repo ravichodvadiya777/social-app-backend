@@ -1,6 +1,6 @@
 // import connectDB from "./db";
 import User from "../model/userModel";
-import { UserType } from "../model/userModel";
+// import { UserType } from "../model/userModel";
 import { Types } from "mongoose";
 
 // Ensure database connection is established before using helper functions
@@ -9,18 +9,16 @@ import { Types } from "mongoose";
 // Define helper functions to interact with the database
 const userHelper = {
     // Data find
-    find: async (query?: UserType, select?: string, sort: string = "createdAt") => {
+    find: async (query?: {username? : object}, select?: string, sort: 'createdAt' | '-createdAt'='createdAt') => {
         try {
             let queryBuilder = User.find(query);
             
             if(select) {
                 queryBuilder = queryBuilder.select(select);
             }
-            if(sort) {
-                queryBuilder = queryBuilder.sort(sort);
-            }
-            
+            queryBuilder = queryBuilder.sort(sort);
             const post = await queryBuilder.exec();
+        
             return post;
         } catch (error) {
             console.error('Error retrieving users:', error);
