@@ -1,4 +1,4 @@
-import { check } from "express-validator"
+import { check, param } from "express-validator"
 
 
 const Schema = {
@@ -26,6 +26,7 @@ const Schema = {
     ],
 
     editUserProfile : [
+        param("id").notEmpty().withMessage("id is a required field"),
         check("name").notEmpty().withMessage("Name is a required field"),
         check("email")
             .notEmpty()
@@ -33,6 +34,10 @@ const Schema = {
             .isLength({ min: 3, max: 84 })
             .isEmail()
             .withMessage("Enter an valid email address"),
+    ],
+
+    getUserProfile : [
+        param("id").notEmpty().withMessage("id is a required field"),
     ]
 };
 
