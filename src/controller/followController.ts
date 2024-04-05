@@ -49,12 +49,41 @@ export async function unfollow(req:Request, res:Response){
         }
         await followHelper.delete(obj);
         
-        return global.sendResponse(res, 201, true, "Unfollow successfully.");
+        return global.sendResponse(res, 200, true, "Unfollow successfully.");
     } catch (error) {
         console.log(error);
         return global.sendResponse(res, 400, false, "Something not right, please try again.");   
     }
 }
+
+// followers list
+export async function followersList(req:Request, res:Response){
+    try {
+        const userId = new Types.ObjectId(req.user._id)
+        
+        const followers = await followHelper.followersList(userId);
+        return global.sendResponse(res, 200, true, "Get followers successfully.",followers);
+    } catch (error) {
+        console.log(error);
+        return global.sendResponse(res, 400, false, "Something not right, please try again.");   
+    }
+}
+
+
+// following list
+export async function followingList(req:Request, res:Response){
+    try {
+        const userId = new Types.ObjectId(req.user._id)
+        
+        const following = await followHelper.followingList(userId);
+        return global.sendResponse(res, 200, true, "Get following successfully.",following);
+    } catch (error) {
+        console.log(error);
+        return global.sendResponse(res, 400, false, "Something not right, please try again.");   
+    }
+}
+
+
 
 // ========================================================== End follow Flow ==========================================================
 

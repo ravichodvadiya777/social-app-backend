@@ -9,16 +9,16 @@ import Schema from "../validationSchema/likeSchema";
 
 import {validationSchema} from "../middleware/validation";
 
-import {getRecord} from "../middleware/getRecord";
+// import {getRecord} from "../middleware/getRecord";
 
-import Like from "../model/likeModel";
+// import Like from "../model/likeModel";
 
 // import Post from "../model/postModel";
 
 const router:Router = Router()
 
 router.post("/", Schema.addLike, validationSchema, authenticateToken, auth(["user"]), addLike);
-router.delete("/:id", Schema.unlike, validationSchema, authenticateToken, auth(["user"]), getRecord(Like), unlike);
+router.delete("/:id", Schema.unlike, validationSchema, authenticateToken, auth(["user"]), unlike);
 router.get("/:id", Schema.getLikeById, validationSchema, authenticateToken, auth(["user"]), getLikeById);
 
 

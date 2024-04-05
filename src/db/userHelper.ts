@@ -82,6 +82,60 @@ const userHelper = {
         }
     },
 
+    getUserProfile : async (userId? : Types.ObjectId) => {
+        try {
+            const user = await User.aggregate([
+                {
+                  $match: {
+                    _id: userId,
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "follows",
+                    localField: "_id",
+                    foreignField: "user",
+                    as: "following",
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "follows",
+                    localField: "_id",
+                    foreignField: "follow",
+                    as: "followers",
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "posts",
+                    localField: "_id",
+                    foreignField: "user",
+                    as: "post",
+                  },
+                },
+                {
+                  $addFields:
+                    {
+                      following: {
+                        $size: "$following",
+                      },
+                      followers: {
+                        $size: "$followers",
+                      },
+                      post: {
+                        $size: "$post",
+                      },
+                    },
+                },
+              ])
+              return user;
+        } catch (error) {
+            console.log('Error retieving user:',error);
+            throw error;
+        }
+    }
+
 };
 
 export default userHelper;

@@ -1,7 +1,7 @@
-import mongoose, { ObjectId } from "mongoose";
+import mongoose, { ObjectId, SchemaDefinitionProperty, Types } from "mongoose";
 
 export type PostType = {
-  user: ObjectId;
+  user: Types.ObjectId | SchemaDefinitionProperty<ObjectId, PostType>,
   description: string;
   photos: { url: string; type: string }[];
   mention: string[];
@@ -30,7 +30,7 @@ const PostModel = new mongoose.Schema<PostType>(
       ],
     },
     mention: {
-      type: [String],
+      type: [mongoose.Types.ObjectId],
     },
   },
   { timestamps: true, versionKey: false }

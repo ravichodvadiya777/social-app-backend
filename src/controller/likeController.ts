@@ -7,7 +7,7 @@ import likeHelper from "../db/likeHelper";
 
 export async function addLike(req:Request, res:Response){
     try {
-        const {postId, type, commentId, subCommentId } = req.body;
+        const {postId, type, commentId } = req.body;
         let id: Types.ObjectId;
         switch (type) {
             case 1:
@@ -16,9 +16,9 @@ export async function addLike(req:Request, res:Response){
             case 2:
                 id = commentId
                 break;
-            case 3:
-                id = subCommentId
-                break;    
+            // case 3:
+            //     id = subCommentId
+            //     break;    
             default:
                 id = postId
                 break;
@@ -53,15 +53,10 @@ export async function addLike(req:Request, res:Response){
 
 export async function unlike(req:Request, res:Response){
     try {
-        const tokenUser = res.record.user.toString()
-        const oldDataUser = req.user._id.toString()
         
-        if(!tokenUser || tokenUser !== oldDataUser){
-           return global.sendResponse(res, 401, false, 'Unauthorized User');
-        }else{
-           await likeHelper.deleteOne({_id : req.params.id, user : req.user._id})
-           return global.sendResponse(res, 200, true,'Unliked successfully');
-        }  
+        await likeHelper.deleteOne({itemId : req.params.id, user : req.user._id})
+        return global.sendResponse(res, 200, true,'Unliked successfully');
+          
     } catch (error) {
         console.log(error);
         return global.sendResponse(res, 400, false, "Something not right, please try again.");   

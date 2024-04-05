@@ -1,13 +1,13 @@
 // import connectDB from "./db";
 import { ObjectId, Types } from "mongoose";
 import Post from "../model/postModel";
-import { PostType } from "../model/postModel";
+// import { PostType } from "../model/postModel";
 
 // Define helper functions to interact with the database
 const postHelper = {
   // Data find
   find: async (
-    query?: PostType,
+    query?: {user? : Types.ObjectId},
     select?: string,
     sort: string = "createdAt"
   ) => {
@@ -20,7 +20,6 @@ const postHelper = {
       if (sort) {
         queryBuilder = queryBuilder.sort(sort);
       }
-
       const post = await queryBuilder.exec();
       return post;
     } catch (error) {
@@ -108,7 +107,7 @@ const postHelper = {
     }
   },
 
-  getAllPost: async () => {
+  getAllPost: async (loginUserId? : Types.ObjectId) => {
     try {
       const post = await Post.aggregate([
         {
@@ -127,23 +126,48 @@ const postHelper = {
             as: "comment",
           },
         },
-        
         {
-          $lookup : {
+          $lookup: {
             from: "users",
             localField: "user",
             foreignField: "_id",
             as: "user",
-            pipeline : [{
-              $project : {
-               username : 1,
-              profileImg: 1,
-                city : 1,
-                country : 1,
-                mention : 1
-              }
-            }],
-          }
+            pipeline: [
+              {
+                $project: {
+                  username: 1,
+                  profileImg: 1,
+                  city: 1,
+                  country: 1,
+                  mention: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $addFields: {
+            isLike: {
+              $cond: {
+                if: {
+                  $anyElementTrue: {
+                    $map: {
+                      input: "$like",
+                      as: "likeItem",
+                      in: {
+                        $eq: [
+                          "$$likeItem.user",
+                          loginUserId,
+                        ],
+                      },
+                    },
+                  },
+                },
+                then: true,
+                else: false,
+              },
+            },
+          },
         },
         {
           $addFields: {
@@ -153,42 +177,26 @@ const postHelper = {
             comment: {
               $size: "$comment",
             },
-            user : {
-              $first : "$user"
-            }
-          },
-        },
-        {
-          $addFields: {
-            mentionIds: {
-              $map: {
-                input: "$mention",
-                as: "mentionId",
-                in: {
-                  $convert: {
-                    input: "$$mentionId",
-                    to: "objectId",
-                  },
-                },
-              },
+            user: {
+              $first: "$user",
             },
           },
         },
         {
           $lookup: {
             from: "users",
-            localField: "mentionIds",
+            localField: "mention",
             foreignField: "_id",
             as: "mentionedUsers",
-            pipeline : [
+            pipeline: [
               {
-                $project : {
-                  username : 1,
-                  profileImg : 1,
-                  name : 1
-                }
-              }
-            ]
+                $project: {
+                  username: 1,
+                  profileImg: 1,
+                  name: 1,
+                },
+              },
+            ],
           },
         },
         {
@@ -212,6 +220,9 @@ const postHelper = {
             comment: {
               $last: "$comment",
             },
+            isLike : {
+              $last: "$isLike",
+            }
           },
         },
       ]);
@@ -220,6 +231,134 @@ const postHelper = {
       console.log("Error retrieving post:", error);
     }
   },
+
+  getPostByUserId: async (query? : {user? : Types.ObjectId}) => {
+    try {
+      const post = await Post.aggregate([
+        {
+          $match: query,
+        },
+        {
+          $lookup: {
+            from: "likes",
+            localField: "_id",
+            foreignField: "postId",
+            as: "like",
+          },
+        },
+        {
+          $lookup: {
+            from: "comments",
+            localField: "_id",
+            foreignField: "postId",
+            as: "comment",
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "user",
+            foreignField: "_id",
+            as: "user",
+            pipeline: [
+              {
+                $project: {
+                  username: 1,
+                  profileImg: 1,
+                  city: 1,
+                  country: 1,
+                  mention: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $addFields: {
+            isLike: {
+              $cond: {
+                if: {
+                  $anyElementTrue: {
+                    $map: {
+                      input: "$like",
+                      as: "likeItem",
+                      in: {
+                        $eq: [
+                          "$$likeItem.user",
+                          query.user,
+                        ],
+                      },
+                    },
+                  },
+                },
+                then: true,
+                else: false,
+              },
+            },
+          },
+        },
+        {
+          $addFields: {
+            like: {
+              $size: "$like",
+            },
+            comment: {
+              $size: "$comment",
+            },
+            user: {
+              $first: "$user",
+            },
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "mention",
+            foreignField: "_id",
+            as: "mentionedUsers",
+            pipeline: [
+              {
+                $project: {
+                  username: 1,
+                  profileImg: 1,
+                  name: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $group: {
+            _id: "$_id",
+            description: {
+              $last: "$description",
+            },
+            photos: {
+              $last: "$photos",
+            },
+            user: {
+              $last: "$user",
+            },
+            mentionedUsers: {
+              $last: "$mentionedUsers",
+            },
+            like: {
+              $last: "$like",
+            },
+            comment: {
+              $last: "$comment",
+            },
+            isLike : {
+              $last: "$isLike",
+            }
+          },
+        },
+      ])
+      return post;
+    } catch (error) {
+      console.log("Error retrieving post:", error);
+    }
+  }
 };
 
 export default postHelper;

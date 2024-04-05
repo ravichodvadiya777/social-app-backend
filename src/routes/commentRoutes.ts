@@ -20,9 +20,9 @@ const router:Router = Router()
 
 // Comment Routes
 
-router.get("/getCommentByPostId/:id", Schema.getCommentByPostId, validationSchema, authenticateToken, auth(["user"]), getRecord(Post), getCommentByPostId);
+router.get("/postId/:id", Schema.getCommentByPostId, validationSchema, authenticateToken, auth(["user"]), getRecord(Post), getCommentByPostId);
 
-router.get("/getSubCommentByCommentId/:id", Schema.getSubCommentByCommentId, validationSchema, authenticateToken, auth(["user"]), getRecord(Comment), getSubCommentByCommentId);
+router.get("/commentId/:id", Schema.getSubCommentByCommentId, validationSchema, authenticateToken, auth(["user"]), getRecord(Comment), getSubCommentByCommentId);
 
 router.post("/", Schema.addComment, validationSchema, authenticateToken, auth(["user"]), addComment);
 

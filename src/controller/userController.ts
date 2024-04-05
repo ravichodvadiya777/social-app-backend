@@ -120,7 +120,8 @@ export async function getUserProfile(req: Request, res: Response) {
       }
     }
 
-    const user = await userHelper.findOne({ _id : new Types.ObjectId(userId) });
+    // const user = await userHelper.findOne({ _id : new Types.ObjectId(userId) });
+    const user = await userHelper.getUserProfile(new Types.ObjectId(userId));
     return global.sendResponse(res, 200, true, "Get user profile.", user);
   } catch (error) {
     console.log(error);
@@ -179,7 +180,6 @@ export async function editUserProfile(req: Request, res: Response) {
 // change password 
 export async function changePassword(req: Request, res: Response) {
   try {
-    console.log("innnn")
     const {oldPassword, newPassword} = req.body;
     const userId = req.user._id;
     

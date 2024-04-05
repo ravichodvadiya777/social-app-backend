@@ -47,7 +47,7 @@ export async function createPost(req: Request, res: Response) {
       user: req.user._id,
       description: description,
       photos: media,
-      mention: mention.length > 0 ? mention : undefined,
+      mention: mention && mention.length > 0 ? mention : undefined,
     };
     const post = await postHelper.insertOne(obj);
     return global.sendResponse(
@@ -87,7 +87,7 @@ export async function getPostById(req: Request, res: Response) {
 
 export async function getAllPost(req: Request, res: Response) {
   try {
-    const post = await postHelper.getAllPost();
+    const post = await postHelper.getAllPost(new Types.ObjectId(req.user._id));
     return global.sendResponse(res, 200, true, "Get Post successfully.", post);
   } catch (error) {
     console.log(error);
@@ -166,4 +166,21 @@ export async function deletePost(req: Request, res: Response) {
   }
 }
 
+export async function getPostByUserId(req: Request, res: Response) {
+  try {
+    const userId = new Types.ObjectId(req.params.id);
+    
+    const postList = await postHelper.getPostByUserId({user : userId});
+    
+    return global.sendResponse(res, 200, true, "Get post Successfully", postList);
+  } catch (error) {
+    console.log(error);
+    return global.sendResponse(
+      res,
+      400,
+      false,
+      "Something not right, please try again."
+    );
+  }
+}
 // ========================================================== End Post Flow ==========================================================
