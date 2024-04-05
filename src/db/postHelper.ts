@@ -114,7 +114,7 @@ const postHelper = {
           $lookup: {
             from: "likes",
             localField: "_id",
-            foreignField: "postId",
+            foreignField: "itemId",
             as: "like",
           },
         },
