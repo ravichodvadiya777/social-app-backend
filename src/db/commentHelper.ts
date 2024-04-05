@@ -73,11 +73,31 @@ const commentHelper = {
                       }
                     },
                     {
+                      $lookup: {
+                        from: "users",
+                        localField: "user",
+                        foreignField: "_id",
+                        as: "user",
+                        pipeline: [
+                          {
+                            $project: {
+                              name: 1,
+                              profileImg: 1,
+                              username: 1,
+                            },
+                          },
+                        ],
+                      },
+                    },
+                    {
+                      $unwind : "$user"
+                    },
+                    {
                         $lookup: {
                             'from': "comments",
                             'localField': "_id",
                             'foreignField': "commentId",
-                            'as': "comment"
+                            'as': "subComment"
                         }
                     } ,
                     {
@@ -90,6 +110,9 @@ const commentHelper = {
                     }, 
                     {
                       $addFields: {
+                        'likeCount' : {
+                          "$size" : "$like"
+                        },
                         'like': {
                           '$map': {
                             'input': '$like', 
@@ -111,7 +134,7 @@ const commentHelper = {
                             }
                           }
                         },
-                        comment : {$size : "$comment"}
+                        subComment : {$size : "$subComment"}
                       }
                     }, {
                       '$addFields': {
@@ -144,26 +167,84 @@ const commentHelper = {
                   '$match': {
                     'commentId': commentId
                   }
-                }, {
+                },
+                {
+                  $lookup: {
+                    from: "users",
+                    localField: "user",
+                    foreignField: "_id",
+                    as: "user",
+                    pipeline: [
+                      {
+                        $project: {
+                          name: 1,
+                          profileImg: 1,
+                          username: 1,
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  $unwind : "$user"
+                },
+                 {
                   '$lookup': {
                     'from': 'likes', 
                     'localField': '_id', 
                     'foreignField': 'itemId', 
                     'as': 'like',
-                    'pipeline':[{'$match':{'user': userId}}]
+                    // 'pipeline':[{'$match':{'user': userId}}]
                   }
                 },
                 {
                   '$addFields':{
-                    'like': {
-                      '$cond': [
-                        { '$eq': [{ '$size': "$like" }, 1] },
-                        true,
-                        false,
-                      ],
+                    'likeCount' : {
+                      "$size" : "$like"
                     },
+                    
                   }
-                } 
+                },
+                {
+                  $addFields: {
+                    like: {
+                      $cond: {
+                        if: {
+                          $anyElementTrue: {
+                            $map: {
+                              input: "$like",
+                              as: "likeItem",
+                              in: {
+                                $eq: [
+                                  "$$likeItem.user",
+                                  userId,
+                                ],
+                              },
+                            },
+                          },
+                        },
+                        then: true,
+                        else: false,
+                      },
+                    },
+                  },
+                },
+                // {
+                //   $match : {
+                //     'like.user' : {$in : ObjectId("660e4e82d02a819a690bf3dd")}
+                //   }
+                // },
+                // {
+                //   $addFields : {
+                //     'like': {
+                //       '$cond': [
+                //         { '$eq': [{ '$size': "$like" }, 1] },
+                //         true,
+                //         false,
+                //       ],
+                //     },
+                //   }
+                // } 
               ])
               return subComment;
         } catch (error) {

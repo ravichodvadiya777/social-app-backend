@@ -50,7 +50,8 @@ const likeHelper = {
                       '$match': {
                         'itemId': itemId
                       }
-                    }, 
+                    },
+                    
                     {
                       '$lookup': {
                         'from': 'follows', 
@@ -65,7 +66,7 @@ const likeHelper = {
                         ], 
                         'as': 'follow'
                       }
-                    }, 
+                    },
                     {
                       '$addFields': {
                         'flag': {
@@ -95,7 +96,27 @@ const likeHelper = {
                     },
                     {
                         '$unset' : "follow"
-                    }
+                    },
+                    {
+                        $lookup: {
+                          from: "users",
+                          localField: "user",
+                          foreignField: "_id",
+                          as: "user",
+                          pipeline: [
+                            {
+                              $project: {
+                                name: 1,
+                                profileImg: 1,
+                                username: 1,
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        $unwind : "$user"
+                      },  
                   ]
             );
             return like;

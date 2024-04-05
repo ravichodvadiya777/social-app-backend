@@ -1,7 +1,7 @@
 import { Router } from "express";
 
 // import controller
-import { addUser, login, verifyToken, getUserProfile, editUserProfile, fileUpload} from "../controller/userController";
+import { addUser, login, verifyToken, getUserProfile, editUserProfile, changePassword, chekUserName, searchByUserName} from "../controller/userController";
 
 import {authenticateToken, auth} from "../middleware/verifyToken";
 
@@ -19,7 +19,11 @@ router.post('/verifyToken', authenticateToken, auth(["user"]), verifyToken);
 
 // Profile Routes
 router.get('/:id', authenticateToken, validationSchema, auth(["user"]), getUserProfile);
+router.patch('/changePassword', Schema.changePassword, validationSchema, authenticateToken, auth(["user"]), changePassword);
 router.patch('/:id', Schema.editUserProfile, validationSchema, authenticateToken, auth(["user"]), editUserProfile);
-router.post('/fileUpload', authenticateToken, validationSchema, auth(["user"]), fileUpload);
+router.get('/', Schema.chekUserName, validationSchema, authenticateToken, auth(["user"]), chekUserName);
+router.post('/serach', authenticateToken, auth(["user"]), searchByUserName);
+
+
 
 export default router

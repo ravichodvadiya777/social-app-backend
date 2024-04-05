@@ -1,6 +1,7 @@
 // import connectDB from "./db";
 import User from "../model/userModel";
-import { UserType } from "../model/userModel";
+// import { UserType } from "../model/userModel";
+import { Types } from "mongoose";
 
 // Ensure database connection is established before using helper functions
 // connectDB();
@@ -8,18 +9,16 @@ import { UserType } from "../model/userModel";
 // Define helper functions to interact with the database
 const userHelper = {
     // Data find
-    find: async (query?: UserType, select?: string, sort: string = "createdAt") => {
+    find: async (query?: {username? : object}, select?: string, sort: 'createdAt' | '-createdAt'='createdAt') => {
         try {
             let queryBuilder = User.find(query);
             
             if(select) {
                 queryBuilder = queryBuilder.select(select);
             }
-            if(sort) {
-                queryBuilder = queryBuilder.sort(sort);
-            }
-            
+            queryBuilder = queryBuilder.sort(sort);
             const post = await queryBuilder.exec();
+        
             return post;
         } catch (error) {
             console.error('Error retrieving users:', error);
@@ -28,7 +27,7 @@ const userHelper = {
     },
 
     // FindOne
-    findOne: async (query?: {email?: string}, select?: string) => {
+    findOne: async (query?: {email?: string, _id? : Types.ObjectId, username? : string}, select?: string) => {
         try {
             let queryBuilder = User.findOne(query);
             
@@ -63,7 +62,7 @@ const userHelper = {
         }
     },
 
-    updateOne: async (query: {_id? : string}, data: {name? : string, dob? : Date, email? : string}) => {
+    updateOne: async (query: {_id? : string}, data: {name? : string, dob? : Date, email? : string, password? : string}) => {
         try {
             const result = await User.updateOne(query,data);
             return result;
@@ -82,6 +81,60 @@ const userHelper = {
             throw error;
         }
     },
+
+    getUserProfile : async (userId? : Types.ObjectId) => {
+        try {
+            const user = await User.aggregate([
+                {
+                  $match: {
+                    _id: userId,
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "follows",
+                    localField: "_id",
+                    foreignField: "user",
+                    as: "following",
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "follows",
+                    localField: "_id",
+                    foreignField: "follow",
+                    as: "followers",
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "posts",
+                    localField: "_id",
+                    foreignField: "user",
+                    as: "post",
+                  },
+                },
+                {
+                  $addFields:
+                    {
+                      following: {
+                        $size: "$following",
+                      },
+                      followers: {
+                        $size: "$followers",
+                      },
+                      post: {
+                        $size: "$post",
+                      },
+                    },
+                },
+              ])
+              return user;
+        } catch (error) {
+            console.log('Error retieving user:',error);
+            throw error;
+        }
+    }
 
 };
 

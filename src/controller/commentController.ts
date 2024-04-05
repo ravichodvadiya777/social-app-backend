@@ -14,9 +14,13 @@ export async function addComment(req:Request, res:Response){
         const obj: CommentType = {
             user : new Types.ObjectId(req.user._id),
             postId : new Types.ObjectId(postId),
-            commentId : new Types.ObjectId(commentId),
             description : description
         }
+
+        if(commentId){
+            obj.commentId = new Types.ObjectId(commentId)
+        }
+        
         const comment = await commentHelper.insertOne(obj);
         return global.sendResponse(res, 201, true, "Comment add successfully.", comment);
     } catch (error) {

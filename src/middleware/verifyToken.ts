@@ -21,7 +21,6 @@ export function authenticateToken(
         return global.sendResponse(res, 401, false, "User not found");
 
       req.user = existUser;
-      // console.log(req.currentUser);
       next();
     });
   } else next();

@@ -1,12 +1,12 @@
 import { Request, Response } from "express";
-import User from "../model/userModel";
 import RefreshToken from "../model/refreshTokensModel";
 import { fileUploading } from "../middleware/fileUploading";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import userHelper from "../db/userHelper";
+import { Types } from "mongoose";
 
-const fieldNames: string[] = ["name", "dob", "email", "bio"];
+const fieldNames: string[] = ["name", "dob", "email", "bio", "country", "city", "address", "pincode", "username"];
 
 // ========================================================== Start User Authentication Flow ==========================================================
 export async function addUser(req: Request, res: Response) {
@@ -61,6 +61,10 @@ export async function login(req: Request, res: Response) {
           token: refreshToken,
           user: user._id,
         });
+      } else {
+        await RefreshToken.findByIdAndUpdate(alreadyRefreshToken._id, {
+          token: refreshToken,
+        });
       }
       res.cookie("App", refreshToken, {
         httpOnly: true,
@@ -81,6 +85,7 @@ export async function login(req: Request, res: Response) {
   }
 }
 
+// token verify 
 export async function verifyToken(req: Request, res: Response) {
   try {
     const token: string = req.body.token;
@@ -104,6 +109,8 @@ export async function verifyToken(req: Request, res: Response) {
 
 // ========================================================== Start User Profile Flow ==========================================================
 
+
+// Get user Profile
 export async function getUserProfile(req: Request, res: Response) {
   try {
     let userId = req.params.id;
@@ -113,7 +120,8 @@ export async function getUserProfile(req: Request, res: Response) {
       }
     }
 
-    const user = await User.findOne({ _id: userId });
+    // const user = await userHelper.findOne({ _id : new Types.ObjectId(userId) });
+    const user = await userHelper.getUserProfile(new Types.ObjectId(userId));
     return global.sendResponse(res, 200, true, "Get user profile.", user);
   } catch (error) {
     console.log(error);
@@ -126,6 +134,8 @@ export async function getUserProfile(req: Request, res: Response) {
   }
 }
 
+
+// edit user profile
 export async function editUserProfile(req: Request, res: Response) {
   try {
     const userId = req.params.id;
@@ -150,8 +160,10 @@ export async function editUserProfile(req: Request, res: Response) {
 
     await userHelper
       .updateOne({ _id: userId }, req.user)
-      .then(() => {
-        return global.sendResponse(res, 200, true, "Edit success!");
+      .then(async() => {
+        const user = await userHelper.findOne({_id : new Types.ObjectId(userId)});
+        // delete user.password;
+        return global.sendResponse(res, 200, true, "Edit success!", user);
       })
       .catch((err) => console.log(err));
   } catch (error) {
@@ -165,20 +177,28 @@ export async function editUserProfile(req: Request, res: Response) {
   }
 }
 
-// File uploding
-export async function fileUpload(req: Request, res: Response) {
+// change password 
+export async function changePassword(req: Request, res: Response) {
   try {
-    const photos: object | object[] | undefined = req.files
-      ? req.files.file
-      : undefined;
-    const url: string[] = [];
-    if (Array.isArray(photos)) {
-      for (const file of photos) {
-        const path = await fileUploading(file);
-        url.push(path as string);
-      }
+    const {oldPassword, newPassword} = req.body;
+    const userId = req.user._id;
+    
+    const user = await userHelper.findOne({ _id: new Types.ObjectId(req.user._id) }, "+password");
+    
+    //Checking old password is correct or not
+    const checkOldPass = await bcrypt.compare(oldPassword, user.password);
+    
+    if (!checkOldPass) {
+      return global.sendResponse(res, 401, false, 'Wrong current Password');
     }
-    return global.sendResponse(res, 200, true, "File upload success!", url);
+
+    //Hashing the new password
+    const hashedPassword = await bcrypt.hash(newPassword || null, 10);
+
+    //Update the new password to database
+    await userHelper.updateOne({_id : userId},{password : hashedPassword})
+    return global.sendResponse(res,200, true,'Password has been changed successfully.');
+
   } catch (error) {
     console.log(error);
     return global.sendResponse(
@@ -190,4 +210,43 @@ export async function fileUpload(req: Request, res: Response) {
   }
 }
 
+// check user name uniq or not
+export async function chekUserName(req: Request, res: Response) {
+  try {
+    const username = req.query.username.toString();
+    
+    const user = await userHelper.findOne({username : username});
+    if(user){
+      return global.sendResponse(res,200,true, "Username already exists.",{username : false})  
+    }
+    return global.sendResponse(res,200,true, "Ok.",{username : true});
+  } catch (error) {
+    console.log(error);
+    return global.sendResponse(
+      res,
+      400,
+      false,
+      "Something not right, please try again."
+    );
+  }
+}
+
+// search by user name
+export async function searchByUserName(req: Request, res: Response) {
+  try {
+    let users = await  userHelper.find({username : { $regex: req.body.username, $options: "i" }}, "username", );
+    if(!req.body.username){
+      users = []
+    }
+    return global.sendResponse(res,200,"Search Successfully",users);
+  } catch (error) {
+    console.log(error);
+    return global.sendResponse(
+      res,
+      400,
+      false,
+      "Something not right, please try again."
+    );
+  }
+}
 // ========================================================== End User Profile Flow ==========================================================
