@@ -111,6 +111,11 @@ const postHelper = {
     try {
       const post = await Post.aggregate([
         {
+          $sort : {
+              createdAt: -1
+          }
+        },
+        {
           $lookup: {
             from: "likes",
             localField: "_id",
