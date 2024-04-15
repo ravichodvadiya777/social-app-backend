@@ -121,8 +121,8 @@ export async function getUserProfile(req: Request, res: Response) {
     }
 
     // const user = await userHelper.findOne({ _id : new Types.ObjectId(userId) });
-    const user = await userHelper.getUserProfile(new Types.ObjectId(userId));
-    return global.sendResponse(res, 200, true, "Get user profile.", user);
+    const user = await userHelper.getUserProfile(new Types.ObjectId(userId), new Types.ObjectId(req.user._id));
+    return global.sendResponse(res, 200, true, "Get user profile.", user[0]);
   } catch (error) {
     console.log(error);
     return global.sendResponse(
@@ -189,7 +189,7 @@ export async function changePassword(req: Request, res: Response) {
     const checkOldPass = await bcrypt.compare(oldPassword, user.password);
     
     if (!checkOldPass) {
-      return global.sendResponse(res, 401, false, 'Wrong current Password');
+      return global.sendResponse(res, 401, false, 'Wrong current password');
     }
 
     //Hashing the new password
@@ -234,11 +234,11 @@ export async function chekUserName(req: Request, res: Response) {
 // search by user name
 export async function searchByUserName(req: Request, res: Response) {
   try {
-    let users = await  userHelper.find({username : { $regex: req.body.username, $options: "i" }}, "username", );
+    let users = await  userHelper.find({username : { $regex: req.body.username, $options: "i" }}, "username profileImg name", );
     if(!req.body.username){
       users = []
     }
-    return global.sendResponse(res,200,"Search Successfully",users);
+    return global.sendResponse(res,200, true, "Search Successfully",users);
   } catch (error) {
     console.log(error);
     return global.sendResponse(

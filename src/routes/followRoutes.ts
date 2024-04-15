@@ -17,7 +17,7 @@ const router:Router = Router()
 // Follow Routes
 router.post("/follow", Schema.follow, validationSchema, authenticateToken, auth(["user"]), follow);
 router.post("/unfollow", Schema.unfollow, validationSchema, authenticateToken, auth(["user"]), unfollow);
-router.get("/followers", authenticateToken, auth(["user"]), followersList);
-router.get("/following", authenticateToken, auth(["user"]), followingList);
+router.get("/:id/followers", authenticateToken, auth(["user"]), followersList);
+router.get("/:id/following", authenticateToken, auth(["user"]), followingList);
 
 export default router

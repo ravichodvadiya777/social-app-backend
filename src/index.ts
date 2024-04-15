@@ -15,11 +15,15 @@ import chetHelper from "./db/chatHelper";
 // config & db
 import "./db/db";
 
+const cors_urls = [
+  "http://localhost:3001",
+  "https://549a-2405-201-2024-a1f6-ac16-b76-5212-fbb6.ngrok-free.app",
+  "http://localhost:4001"
+]
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:3001",
-    ],
+    origin: cors_urls,
     credentials: true,
   })
 );
@@ -33,27 +37,26 @@ app.use(router)
 // socket 
 
 const server = http.createServer(app);
-const io = new socket.Server(server);
+const io = new socket.Server(server, {
+  cors: (cors, callback) => {
+    if (cors_urls.includes(cors.headers["origin"])) {
+      callback(null, { origin: true, credentials: false });
+    } else {
+      // callback(new Error("Not allowed by CORS"));
+      callback(null, { origin: true, credentials: false });
+    }
+  },
+});
 global.Onscreen = {}
 
 io.on('connection', socket => {
   socket.on('joinRoom', data => {
-    // {
-    //   "user" : "66027364722ea067d6b81a63",
-    // }
-    
     socket.join(data.user);
     socket.emit("message", `Welcome to the room.`);
     socket.broadcast.emit("isOnline",true);
   });
 
   socket.on('sendMessage', async data => {
-    // {
-    //   sender : "",
-    //   receiver : "",
-    //   msg : "",
-    //   type : ""
-    // }
     const sender = data.sender;
     const receiver = data.receiver;
     if(sender > receiver){
@@ -71,12 +74,15 @@ io.on('connection', socket => {
   })
 
   socket.on('onScreen', async data => {
-    // {
-    //   userId : "",
-    //   screenId : ""
-    // }
     global.Onscreen[data.userId] = data.screenId;
   })
+
+  socket.on("typing", (data) => {
+    socket
+      .to(global.Onscreen[data.userId])
+      .emit("typing", { typing: data.typing });
+  });
+  
   socket.on('disconnect', () => {});
 });
 

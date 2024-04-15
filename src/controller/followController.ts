@@ -60,8 +60,9 @@ export async function unfollow(req:Request, res:Response){
 export async function followersList(req:Request, res:Response){
     try {
         const userId = new Types.ObjectId(req.user._id)
+        const friendId = new Types.ObjectId(req.params.id);
         
-        const followers = await followHelper.followersList(userId);
+        const followers = await followHelper.followersList(friendId, userId);
         return global.sendResponse(res, 200, true, "Get followers successfully.",followers);
     } catch (error) {
         console.log(error);
@@ -74,8 +75,9 @@ export async function followersList(req:Request, res:Response){
 export async function followingList(req:Request, res:Response){
     try {
         const userId = new Types.ObjectId(req.user._id)
+        const friendId = new Types.ObjectId(req.params.id);
         
-        const following = await followHelper.followingList(userId);
+        const following = await followHelper.followingList(friendId, userId);
         return global.sendResponse(res, 200, true, "Get following successfully.",following);
     } catch (error) {
         console.log(error);

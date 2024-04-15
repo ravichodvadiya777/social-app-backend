@@ -21,7 +21,7 @@ const userHelper = {
         
             return post;
         } catch (error) {
-            console.error('Error retrieving users:', error);
+            console.error("Error retrieving users:", error);
             throw error;
         }
     },
@@ -37,7 +37,7 @@ const userHelper = {
             const post = await queryBuilder.exec();
             return post;
         } catch (error) {
-            console.error('Error retrieving users:', error);
+            console.error("Error retrieving users:", error);
             throw error;
         }
     },
@@ -47,7 +47,7 @@ const userHelper = {
             const result = await User.create(data);
             return result;
         } catch (error) {
-            console.error('Error adding user:', error);
+            console.error("Error adding user:", error);
             throw error;
         }
     },
@@ -57,7 +57,7 @@ const userHelper = {
             const result = await User.updateMany(query,data,option);
             return result;
         } catch (error) {
-            console.error('Error update user:', error);
+            console.error("Error update user:", error);
             throw error;
         }
     },
@@ -67,7 +67,7 @@ const userHelper = {
             const result = await User.updateOne(query,data);
             return result;
         } catch (error) {
-            console.error('Error update user:', error);
+            console.error("Error update user:", error);
             throw error;
         }
     },
@@ -77,12 +77,12 @@ const userHelper = {
             const result = await User.deleteOne(query, {new : true});
             return result;
         } catch (error) {
-            console.error('Error deleting user:', error);
+            console.error("Error deleting user:", error);
             throw error;
         }
     },
 
-    getUserProfile : async (userId? : Types.ObjectId) => {
+    getUserProfile : async (userId? : Types.ObjectId, loginUser?: Types.ObjectId) => {
         try {
             const user = await User.aggregate([
                 {
@@ -108,6 +108,15 @@ const userHelper = {
                 },
                 {
                   $lookup: {
+                    from: "follows",
+                    localField: "_id",
+                    foreignField: "follow",
+                    pipeline: [{ $match: { user: loginUser}}],
+                    as: "follow",
+                  }
+                },
+                {
+                  $lookup: {
                     from: "posts",
                     localField: "_id",
                     foreignField: "user",
@@ -123,6 +132,9 @@ const userHelper = {
                       followers: {
                         $size: "$followers",
                       },
+                      follow: {
+                        $cond: [{ $eq: [{ $size: "$follow"}, 1]}, true, false]
+                      },
                       post: {
                         $size: "$post",
                       },
@@ -131,7 +143,7 @@ const userHelper = {
               ])
               return user;
         } catch (error) {
-            console.log('Error retieving user:',error);
+            console.log("Error retieving user:",error);
             throw error;
         }
     }

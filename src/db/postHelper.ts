@@ -107,14 +107,9 @@ const postHelper = {
     }
   },
 
-  getAllPost: async (loginUserId? : Types.ObjectId) => {
+  getAllPost: async (loginUserId? : Types.ObjectId, options? : object, sortData?: object | number, startIndex? : number, limit? : number) => {
     try {
       const post = await Post.aggregate([
-        {
-          $sort : {
-              createdAt: -1
-          }
-        },
         {
           $lookup: {
             from: "likes",
@@ -227,8 +222,20 @@ const postHelper = {
             },
             isLike : {
               $last: "$isLike",
+            },
+            createdAt: {
+              $last: "$createdAt"
             }
           },
+        },
+        {
+          $facet: {
+            totalRecord: [{ $count: "total" }],
+            data: options ? [{ $skip: startIndex }, { $limit: limit }] : [],
+          },
+        },
+        {
+          $project: { data: 1, totalRecord: { $first: "$totalRecord.total" } },
         },
       ]);
       return post;
@@ -355,8 +362,16 @@ const postHelper = {
             },
             isLike : {
               $last: "$isLike",
+            },
+            createdAt: {
+              $last: "$createdAt"
             }
           },
+        },
+        {
+          $sort : {
+              createdAt: -1
+          }
         },
       ])
       return post;

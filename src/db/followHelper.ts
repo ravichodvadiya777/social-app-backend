@@ -43,12 +43,12 @@ const followHelper = {
         }
     },
 
-    followersList: async (userId : Types.ObjectId) => {
+    followersList: async (friendId: Types.ObjectId, userId : Types.ObjectId) => {
         try {
             const followers = await Follow.aggregate([
                 {
                   '$match': {
-                    'follow': userId
+                    'follow': friendId
                   }
                 },
                 {
@@ -90,7 +90,7 @@ const followHelper = {
                   }
                 }, {
                   '$addFields': {
-                    'followBack': {
+                    'followBackFlag': {
                       '$cond': [
                         {
                           '$eq': [
@@ -111,12 +111,12 @@ const followHelper = {
         }
     },
 
-    followingList: async (userId : Types.ObjectId) => {
+    followingList: async (friendId: Types.ObjectId, userId : Types.ObjectId) => {
         try {
             const following = await Follow.aggregate([
                 {
                   $match: {
-                    user: userId,
+                    user: friendId,
                   },
                 },
                 {
@@ -144,6 +144,35 @@ const followHelper = {
                   {
                     $unwind : "$user"
                   },
+                  {
+                    '$lookup': {
+                      'from': 'follows', 
+                      'localField': 'user._id', 
+                      'foreignField': 'follow', 
+                      'as': 'followBack', 
+                      'pipeline': [
+                        {
+                          '$match': {
+                            'user': userId
+                          }
+                        }
+                      ]
+                    }
+                  }, {
+                    '$addFields': {
+                      'followBackFlag': {
+                        '$cond': [
+                          {
+                            '$eq': [
+                              {
+                                '$size': '$followBack'
+                              }, 0
+                            ]
+                          }, false, true
+                        ]
+                      }
+                    }
+                  }
               ])
               return following;
         } catch (error) {

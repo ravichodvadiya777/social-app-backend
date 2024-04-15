@@ -87,8 +87,17 @@ export async function getPostById(req: Request, res: Response) {
 
 export async function getAllPost(req: Request, res: Response) {
   try {
-    const post = await postHelper.getAllPost(new Types.ObjectId(req.user._id));
-    return global.sendResponse(res, 200, true, "Get Post successfully.", post);
+    const { options } = req.body;
+    const page = options?.page + 1 || 1;
+    const limit = options?.sizePerPage || 10;
+    const column_name = options?.sort || "_id";
+    const OrderBy = options?.order == "ASC" ? 1 : -1;
+    const startIndex = (page - 1) * limit;
+    const sortData = options ? { [column_name]: OrderBy } : 0;
+    
+    const post = await postHelper.getAllPost(new Types.ObjectId(req.user._id),options, sortData, startIndex, limit);
+    
+    return global.sendResponse(res, 200, true, "Get Post successfully.", post[0]);
   } catch (error) {
     console.log(error);
     return global.sendResponse(

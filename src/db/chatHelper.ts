@@ -71,7 +71,8 @@ const chatHelper = {
                   }
                 }, {
                   '$project': {
-                    '_id': 1, 
+                    '_id': "$user._id",
+                    'conversationId': '$_id', 
                     'username': {
                       '$first': '$user.username'
                     }, 
@@ -93,43 +94,29 @@ const chatHelper = {
         }
     },
     // find
-    find: async (query?: {conversationId : string}, limit: number=10, sort : 'createdAt' | '-createdAt'='createdAt') => {
+    find: async (query?: {conversationId : string}, limit?: number, page?: number, sort : 'createdAt' | '-createdAt'='createdAt') => {
         try {
-        
+          
             let queryBuilder = Chat.find(query); 
             
             if(limit) {
-                queryBuilder = queryBuilder.limit(limit);
+              queryBuilder = queryBuilder.limit(limit);
+            }
+            
+            if (page) {
+              queryBuilder = queryBuilder.skip(limit * page);
             }
             
             queryBuilder = queryBuilder.sort(sort);
             
-            const comment = await queryBuilder.exec();
+            const getChat = await queryBuilder.exec();
             
-            return comment;
+            return getChat;
         } catch (error) {
             console.error('Error retrieving comment:', error);
             throw error;
         }
     },
-
-    // FindOne
-    // findOne: async (query?: {_id? : Types.ObjectId}, select?: string) => {
-    //     try {
-    //         let queryBuilder = Comment.findOne(query);
-            
-    //         if(select) {
-    //             queryBuilder = queryBuilder.select(select);
-    //         }
-            
-    //         const comment = await queryBuilder.exec();
-            
-    //         return comment;
-    //     } catch (error) {
-    //         console.error('Error retrieving comments:', error);
-    //         throw error;
-    //     }
-    // },
 
     insertOne: async (data: ChatType) => {
         try {
