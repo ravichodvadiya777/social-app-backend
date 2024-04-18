@@ -33,7 +33,7 @@ const followHelper = {
         }
     },
 
-    delete: async (query: object) => {
+    deleteOne: async (query: object) => {
         try {
             const result = await Follow.deleteOne(query, {new : true});
             return result;
@@ -42,18 +42,28 @@ const followHelper = {
             throw error;
         }
     },
-
-    followersList: async (friendId: Types.ObjectId, userId : Types.ObjectId) => {
+    
+    deleteMany: async (query: object) => {
         try {
-            const followers = await Follow.aggregate([
+            const result = await Follow.deleteMany(query, {new : true});
+            return result;
+        } catch (error) {
+            console.error('Error deleting follow:', error);
+            throw error;
+        }
+    },
+
+    followersList: async (friendId: Types.ObjectId, userId : Types.ObjectId, options? : object, sortData?: object | number, startIndex? : number, limit? : number) => {
+        try {
+          const followers = await Follow.aggregate([
                 {
                   '$match': {
                     'follow': friendId
                   }
                 },
                 {
-                    $sort : { 
-                        createdAt : -1
+                    '$sort' : { 
+                        'createdAt' : -1
                     }
                 }, 
                 {
@@ -88,7 +98,8 @@ const followHelper = {
                       }
                     ]
                   }
-                }, {
+                }, 
+                {
                   '$addFields': {
                     'followBackFlag': {
                       '$cond': [
@@ -102,7 +113,16 @@ const followHelper = {
                       ]
                     }
                   }
-                }
+                },
+                {
+                  $facet: {
+                    totalRecord: [{ $count: "total" }],
+                    data: options ? [{ $skip: startIndex }, { $limit: limit }] : [],
+                  },
+                },
+                {
+                  $project: { data: 1, totalRecord: { $first: "$totalRecord.total" } },
+                },
               ]);
             return followers;
         } catch (error) {
@@ -111,7 +131,7 @@ const followHelper = {
         }
     },
 
-    followingList: async (friendId: Types.ObjectId, userId : Types.ObjectId) => {
+    followingList: async (friendId: Types.ObjectId, userId : Types.ObjectId, options? : object, sortData?: object | number, startIndex? : number, limit? : number) => {
         try {
             const following = await Follow.aggregate([
                 {
@@ -158,7 +178,8 @@ const followHelper = {
                         }
                       ]
                     }
-                  }, {
+                  }, 
+                  {
                     '$addFields': {
                       'followBackFlag': {
                         '$cond': [
@@ -172,7 +193,16 @@ const followHelper = {
                         ]
                       }
                     }
-                  }
+                  },
+                  {
+                    $facet: {
+                      totalRecord: [{ $count: "total" }],
+                      data: options ? [{ $skip: startIndex }, { $limit: limit }] : [],
+                    },
+                  },
+                  {
+                    $project: { data: 1, totalRecord: { $first: "$totalRecord.total" } },
+                  },
               ])
               return following;
         } catch (error) {

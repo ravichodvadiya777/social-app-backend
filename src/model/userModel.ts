@@ -19,7 +19,8 @@ export type UserType ={
     country: string,
     city :  string,
     address : string,
-    pincode : number
+    pincode : number,
+    active : boolean,
 }
 const UserModel = new mongoose.Schema<UserType>({
     username: {
@@ -69,6 +70,10 @@ const UserModel = new mongoose.Schema<UserType>({
     },
     pincode: {
         type : Number
+    },
+    active: {
+        type: Boolean,
+        default: true
     }
 },
 { timestamps: true, versionKey: false }

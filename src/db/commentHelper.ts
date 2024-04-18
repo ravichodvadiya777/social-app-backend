@@ -62,9 +62,9 @@ const commentHelper = {
         }
     },
 
-    getCommentByPostId: async (postId : Types.ObjectId, userId: Types.ObjectId) => {
+    getCommentByPostId: async (postId : Types.ObjectId, userId: Types.ObjectId, options? : object, sortData?: object | number, startIndex? : number, limit? : number) => {
         try {
-            const comment = await Comment.aggregate(
+          const comment = await Comment.aggregate(
                 [
                     {
                       $match: {
@@ -90,9 +90,6 @@ const commentHelper = {
                       },
                     },
                     {
-                      $unwind : "$user"
-                    },
-                    {
                         $lookup: {
                             'from': "comments",
                             'localField': "_id",
@@ -106,6 +103,11 @@ const commentHelper = {
                         'localField': '_id', 
                         'foreignField': 'itemId', 
                         'as': 'like'
+                      }
+                    },
+                    {
+                      '$addFields': {
+                        'user': {'$first' : "$user"}
                       }
                     }, 
                     {
@@ -136,7 +138,8 @@ const commentHelper = {
                         },
                         subComment : {$size : "$subComment"}
                       }
-                    }, {
+                    }, 
+                    {
                       '$addFields': {
                         'like': {
                           '$reduce': {
@@ -150,7 +153,16 @@ const commentHelper = {
                           }
                         }
                       }
-                    }
+                    },
+                    {
+                      $facet: {
+                        totalRecord: [{ $count: "total" }],
+                        data: options ? [{ $skip: startIndex }, { $limit: limit }] : [],
+                      },
+                    },
+                    {
+                      $project: { data: 1, totalRecord: { $first: "$totalRecord.total" } },
+                    },  
                   ]
             );
             return comment;
@@ -160,7 +172,7 @@ const commentHelper = {
         }
     },
 
-    getSubCommentByCommentId: async (commentId : Types.ObjectId, userId: Types.ObjectId) => {
+    getSubCommentByCommentId: async (commentId : Types.ObjectId, userId: Types.ObjectId, options? : object, sortData?: object | number, startIndex? : number, limit? : number) => {
         try {
             const subComment = await Comment.aggregate([
                 {
@@ -185,9 +197,9 @@ const commentHelper = {
                     ],
                   },
                 },
-                {
-                  $unwind : "$user"
-                },
+                // {
+                //   $unwind : "$user"
+                // },
                  {
                   '$lookup': {
                     'from': 'likes', 
@@ -203,6 +215,11 @@ const commentHelper = {
                       "$size" : "$like"
                     },
                     
+                  }
+                },
+                {
+                  '$addFields': {
+                    'user': {'$first' : "$user"}
                   }
                 },
                 {
@@ -228,6 +245,15 @@ const commentHelper = {
                       },
                     },
                   },
+                },
+                {
+                  $facet: {
+                    totalRecord: [{ $count: "total" }],
+                    data: options ? [{ $skip: startIndex }, { $limit: limit }] : [],
+                  },
+                },
+                {
+                  $project: { data: 1, totalRecord: { $first: "$totalRecord.total" } },
                 },
                 // {
                 //   $match : {

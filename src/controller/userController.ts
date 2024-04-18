@@ -5,6 +5,8 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import userHelper from "../db/userHelper";
 import { Types } from "mongoose";
+import postHelper from "../db/postHelper";
+import followHelper from "../db/followHelper";
 
 const fieldNames: string[] = ["name", "dob", "email", "bio", "country", "city", "address", "pincode", "username"];
 
@@ -46,9 +48,12 @@ export async function login(req: Request, res: Response) {
       return global.sendResponse(res, 401, false, "Incorrect password");
     } else {
       user.password = undefined;
+      if(!user.active)return global.sendResponse(res, 401, false, "User is not active");
+
       const accessToken: string = await user.generateAuthToken(
         process.env.JWT_EXPIRE_IN
       ); // 5 mini
+
       const refreshToken: string = await user.generateAuthToken(); // main
       if (user._doc) {
         user._doc.accessToken = accessToken;
@@ -247,6 +252,31 @@ export async function searchByUserName(req: Request, res: Response) {
       false,
       "Something not right, please try again."
     );
+  }
+}
+
+// delete account
+export async function deleteAccount(req: Request, res: Response) {
+  try {
+    const userId = req.params.id;
+    await userHelper.delete({ _id: userId });
+    // delete post
+    // remove post
+    await postHelper.deleteMany({ user: userId });
+
+    // remove follower tab and following tab
+    await followHelper.deleteMany({$or : [{user : userId},{follow : userId}]});
+
+    // remove notification pending
+    return global.sendResponse(res, 200, true, "Account deleted successfully.");
+  } catch (error) {
+    console.log(error);
+    return global.sendResponse(
+      res,
+      400,
+      false,
+      "Something not right, please try again."
+    )
   }
 }
 // ========================================================== End User Profile Flow ==========================================================

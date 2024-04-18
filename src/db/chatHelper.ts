@@ -37,9 +37,15 @@ const chatHelper = {
                           }, 1, 0
                         ]
                       }
+                    },
+                    'createdAt': {
+                      '$last': '$createdAt'
                     }
                   }
-                }, {
+                },{
+                  '$sort' : {'$createdAt' : -1}
+                }, 
+                {
                   '$addFields': {
                     'loggedNotUser': {
                       '$cond': {
@@ -71,7 +77,7 @@ const chatHelper = {
                   }
                 }, {
                   '$project': {
-                    '_id': "$user._id",
+                    '_id': '$loggedNotUser',
                     'conversationId': '$_id', 
                     'username': {
                       '$first': '$user.username'

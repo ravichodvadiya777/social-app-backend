@@ -97,9 +97,19 @@ const postHelper = {
     }
   },
 
-  delete: async (query: object) => {
+  deleteOne: async (query: object) => {
     try {
       const result = await Post.deleteOne(query, { new: true });
+      return result;
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      throw error;
+    }
+  },
+  
+  deleteMany: async (query: object) => {
+    try {
+      const result = await Post.deleteMany(query, { new: true });
       return result;
     } catch (error) {
       console.error("Error deleting post:", error);

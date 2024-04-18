@@ -42,7 +42,7 @@ const likeHelper = {
         }
     },
 
-    getLikeById: async (itemId : Types.ObjectId, userId : Types.ObjectId) => {
+    getLikeById: async (itemId : Types.ObjectId, userId : Types.ObjectId, options? : object, sortData?: object | number, startIndex? : number, limit? : number) => {
         try {
             const like = await Like.aggregate(
                 [
@@ -115,7 +115,21 @@ const likeHelper = {
                         },
                       },
                       {
-                        $unwind : "$user"
+                        '$addFields': {
+                          'user': {'$first' : "$user"}
+                        }
+                      },
+                      // {
+                      //   $unwind : "$user"
+                      // },
+                      {
+                        $facet: {
+                          totalRecord: [{ $count: "total" }],
+                          data: options ? [{ $skip: startIndex }, { $limit: limit }] : [],
+                        },
+                      },
+                      {
+                        $project: { data: 1, totalRecord: { $first: "$totalRecord.total" } },
                       },  
                   ]
             );

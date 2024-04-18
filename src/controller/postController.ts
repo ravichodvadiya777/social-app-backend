@@ -88,16 +88,19 @@ export async function getPostById(req: Request, res: Response) {
 export async function getAllPost(req: Request, res: Response) {
   try {
     const { options } = req.body;
-    const page = options?.page + 1 || 1;
+    const page = options?.page || 0;
     const limit = options?.sizePerPage || 10;
     const column_name = options?.sort || "_id";
     const OrderBy = options?.order == "ASC" ? 1 : -1;
-    const startIndex = (page - 1) * limit;
+    const startIndex = page * limit;
     const sortData = options ? { [column_name]: OrderBy } : 0;
     
     const post = await postHelper.getAllPost(new Types.ObjectId(req.user._id),options, sortData, startIndex, limit);
+    const pages = Math.ceil(post[0].totalRecord / limit);
+    const hasNextPage = Number(page) < pages - 1;
+    const hasPreviousPage = Number(page) > 0;
     
-    return global.sendResponse(res, 200, true, "Get Post successfully.", post[0]);
+    return global.sendResponse(res, 200, true, "Get Post successfully.", {post : post[0].data, hasNextPage, hasPreviousPage});
   } catch (error) {
     console.log(error);
     return global.sendResponse(
@@ -162,7 +165,7 @@ export async function deletePost(req: Request, res: Response) {
       }
     }
     // await Post.findByIdAndDelete(postId);
-    await postHelper.delete({ _id: new Types.ObjectId(postId) });
+    await postHelper.deleteOne({ _id: new Types.ObjectId(postId) });
     return global.sendResponse(res, 200, true, "Deleted Successfully");
   } catch (error) {
     console.log(error);

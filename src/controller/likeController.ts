@@ -15,10 +15,7 @@ export async function addLike(req:Request, res:Response){
                 break;
             case 2:
                 id = commentId
-                break;
-            // case 3:
-            //     id = subCommentId
-            //     break;    
+                break;    
             default:
                 id = postId
                 break;
@@ -67,8 +64,19 @@ export async function unlike(req:Request, res:Response){
 export async function getLikeById(req:Request, res:Response){
     try {
         const id = new Types.ObjectId(req.params.id);
-        const getLike = await likeHelper.getLikeById(id, new Types.ObjectId(req.user._id));
-        return global.sendResponse(res, 200, true,'Get liked successfully', getLike);
+        const { options } = req.body;
+        const page = options?.page || 0;
+        const limit = options?.sizePerPage || 10;
+        const column_name = options?.sort || "_id";
+        const OrderBy = options?.order == "ASC" ? 1 : -1;
+        const startIndex = page * limit;
+        const sortData = options ? { [column_name]: OrderBy } : 0;
+
+        const getLike = await likeHelper.getLikeById(id, new Types.ObjectId(req.user._id), options, sortData, startIndex, limit);
+        const pages = Math.ceil(getLike[0].totalRecord / limit);
+        const hasNextPage = Number(page) < pages - 1;
+        const hasPreviousPage = Number(page) > 0;
+        return global.sendResponse(res, 200, true,'Get liked successfully', {getLike : getLike[0].data, hasNextPage, hasPreviousPage});
     } catch (error) {
         console.log(error);
         return global.sendResponse(res, 400, false, "Something not right, please try again.");   
