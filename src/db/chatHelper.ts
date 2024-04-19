@@ -18,7 +18,8 @@ const chatHelper = {
                       }
                     ]
                   }
-                }, {
+                }, 
+                {
                   '$group': {
                     '_id': '$conversationId', 
                     'sender': {
@@ -42,8 +43,9 @@ const chatHelper = {
                       '$last': '$createdAt'
                     }
                   }
-                },{
-                  '$sort' : {'$createdAt' : -1}
+                },
+                {
+                  '$sort' : {'createdAt' : -1}
                 }, 
                 {
                   '$addFields': {
@@ -59,7 +61,8 @@ const chatHelper = {
                       }
                     }
                   }
-                }, {
+                }, 
+                {
                   '$lookup': {
                     'from': 'users', 
                     'localField': 'loggedNotUser', 
@@ -75,7 +78,8 @@ const chatHelper = {
                       }
                     ]
                   }
-                }, {
+                }, 
+                {
                   '$project': {
                     '_id': '$loggedNotUser',
                     'conversationId': '$_id', 

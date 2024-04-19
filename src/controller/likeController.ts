@@ -64,15 +64,11 @@ export async function unlike(req:Request, res:Response){
 export async function getLikeById(req:Request, res:Response){
     try {
         const id = new Types.ObjectId(req.params.id);
-        const { options } = req.body;
-        const page = options?.page || 0;
-        const limit = options?.sizePerPage || 10;
-        const column_name = options?.sort || "_id";
-        const OrderBy = options?.order == "ASC" ? 1 : -1;
-        const startIndex = page * limit;
-        const sortData = options ? { [column_name]: OrderBy } : 0;
+        const page = Number(req.query.page) || 0;
+        const limit = Number(req.query.limit) || 10;
+        const startIndex =  page * limit
 
-        const getLike = await likeHelper.getLikeById(id, new Types.ObjectId(req.user._id), options, sortData, startIndex, limit);
+        const getLike = await likeHelper.getLikeById(id, new Types.ObjectId(req.user._id), startIndex, limit);
         const pages = Math.ceil(getLike[0].totalRecord / limit);
         const hasNextPage = Number(page) < pages - 1;
         const hasPreviousPage = Number(page) > 0;

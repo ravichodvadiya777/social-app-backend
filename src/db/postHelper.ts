@@ -117,7 +117,7 @@ const postHelper = {
     }
   },
 
-  getAllPost: async (loginUserId? : Types.ObjectId, options? : object, sortData?: object | number, startIndex? : number, limit? : number) => {
+  getAllPost: async (loginUserId? : Types.ObjectId, startIndex? : number, limit? : number) => {
     try {
       const post = await Post.aggregate([
         {
@@ -241,7 +241,7 @@ const postHelper = {
         {
           $facet: {
             totalRecord: [{ $count: "total" }],
-            data: options ? [{ $skip: startIndex }, { $limit: limit }] : [],
+            data:  [{$sort : {"createdAt" : -1}},{ $skip: startIndex }, { $limit: limit }]
           },
         },
         {

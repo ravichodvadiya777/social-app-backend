@@ -62,43 +62,43 @@ const commentHelper = {
         }
     },
 
-    getCommentByPostId: async (postId : Types.ObjectId, userId: Types.ObjectId, options? : object, sortData?: object | number, startIndex? : number, limit? : number) => {
+    getCommentByPostId: async (postId : Types.ObjectId, userId: Types.ObjectId, startIndex? : number, limit? : number) => {
         try {
           const comment = await Comment.aggregate(
                 [
                     {
-                      $match: {
+                      '$match': {
                         'postId': postId,
                         'commentId' : {$exists : false}
                       }
                     },
                     {
-                      $lookup: {
-                        from: "users",
-                        localField: "user",
-                        foreignField: "_id",
-                        as: "user",
-                        pipeline: [
+                      '$lookup': {
+                        'from': "users",
+                        'localField': "user",
+                        'foreignField': "_id",
+                        'as': "user",
+                        'pipeline': [
                           {
-                            $project: {
-                              name: 1,
-                              profileImg: 1,
-                              username: 1,
+                            '$project': {
+                              'name': 1,
+                              'profileImg': 1,
+                              'username': 1,
                             },
                           },
                         ],
                       },
                     },
                     {
-                        $lookup: {
+                        '$lookup': {
                             'from': "comments",
                             'localField': "_id",
                             'foreignField': "commentId",
                             'as': "subComment"
                         }
-                    } ,
+                    },
                     {
-                      $lookup: {
+                      '$lookup': {
                         'from': 'likes', 
                         'localField': '_id', 
                         'foreignField': 'itemId', 
@@ -111,7 +111,7 @@ const commentHelper = {
                       }
                     }, 
                     {
-                      $addFields: {
+                      '$addFields': {
                         'likeCount' : {
                           "$size" : "$like"
                         },
@@ -136,7 +136,7 @@ const commentHelper = {
                             }
                           }
                         },
-                        subComment : {$size : "$subComment"}
+                        'subComment' : {'$size' : "$subComment"}
                       }
                     }, 
                     {
@@ -155,13 +155,13 @@ const commentHelper = {
                       }
                     },
                     {
-                      $facet: {
-                        totalRecord: [{ $count: "total" }],
-                        data: options ? [{ $skip: startIndex }, { $limit: limit }] : [],
+                      '$facet': {
+                        'totalRecord': [{ '$count': "total" }],
+                        'data': [{'$sort' : {"createdAt" : -1}},{ '$skip': startIndex }, { '$limit': limit }],
                       },
                     },
                     {
-                      $project: { data: 1, totalRecord: { $first: "$totalRecord.total" } },
+                      '$project': { 'data': 1, 'totalRecord': { '$first': "$totalRecord.total" } },
                     },  
                   ]
             );
@@ -172,7 +172,7 @@ const commentHelper = {
         }
     },
 
-    getSubCommentByCommentId: async (commentId : Types.ObjectId, userId: Types.ObjectId, options? : object, sortData?: object | number, startIndex? : number, limit? : number) => {
+    getSubCommentByCommentId: async (commentId : Types.ObjectId, userId: Types.ObjectId, startIndex? : number, limit? : number) => {
         try {
             const subComment = await Comment.aggregate([
                 {
@@ -249,7 +249,7 @@ const commentHelper = {
                 {
                   $facet: {
                     totalRecord: [{ $count: "total" }],
-                    data: options ? [{ $skip: startIndex }, { $limit: limit }] : [],
+                    data: [{$sort : {"createdAt" : -1}},{ $skip: startIndex }, { $limit: limit }],
                   },
                 },
                 {

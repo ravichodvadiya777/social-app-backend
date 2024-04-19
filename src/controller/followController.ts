@@ -4,13 +4,6 @@ import followHelper from "../db/followHelper";
 import {Types} from "mongoose";
 import {FollowType} from "../model/followModel";
 
-type OptionType = {
-    page : number,
-    sizePerPage : number,
-    sort : string,
-    order : string
-}
-
 
 
 // ========================================================== Start follow Flow ==========================================================
@@ -68,20 +61,12 @@ export async function followersList(req:Request, res:Response){
     try {
         const userId = new Types.ObjectId(req.user._id)
         const friendId = new Types.ObjectId(req.params.id);
-        const options: OptionType = {
-            page : Number(req.query.page),
-            sizePerPage : Number(req.query.sizePerPage),
-            sort : req.query.sort.toString(),
-            order : req.query.order.toString()
-        }
-        const page = options?.page || 0;
-        const limit = options?.sizePerPage || 10;
-        const column_name = options?.sort || "_id";
-        const OrderBy = options?.order == "ASC" ? 1 : -1;
-        const startIndex = page * limit;
-        const sortData = options ? { [column_name]: OrderBy } : 0;
         
-        const followers = await followHelper.followersList(friendId, userId, options, sortData, startIndex, limit);
+        const page = Number(req.query.page) || 0;
+        const limit = Number(req.query.limit) || 10;
+        const startIndex =  page * limit
+        
+        const followers = await followHelper.followersList(friendId, userId, startIndex, limit);
         const pages = Math.ceil(followers[0].totalRecord / limit);
         const hasNextPage = Number(page) < pages - 1;
         const hasPreviousPage = Number(page) > 0;
@@ -98,20 +83,12 @@ export async function followingList(req:Request, res:Response){
     try {
         const userId = new Types.ObjectId(req.user._id)
         const friendId = new Types.ObjectId(req.params.id);
-        const options: OptionType = {
-            page : Number(req.query.page),
-            sizePerPage : Number(req.query.sizePerPage),
-            sort : req.query.sort.toString(),
-            order : req.query.order.toString()
-        }
-        const page = options?.page || 0;
-        const limit = options?.sizePerPage || 10;
-        const column_name = options?.sort || "_id";
-        const OrderBy = options?.order == "ASC" ? 1 : -1;
-        const startIndex = page * limit;
-        const sortData = options ? { [column_name]: OrderBy } : 0;
         
-        const following = await followHelper.followingList(friendId, userId, options, sortData, startIndex, limit);
+        const page = Number(req.query.page) || 0;
+        const limit = Number(req.query.limit) || 10;
+        const startIndex =  page * limit
+        
+        const following = await followHelper.followingList(friendId, userId, startIndex, limit);
         
         const pages = Math.ceil(following[0].totalRecord / limit);
         const hasNextPage = Number(page) < pages - 1;

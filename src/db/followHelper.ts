@@ -53,7 +53,7 @@ const followHelper = {
         }
     },
 
-    followersList: async (friendId: Types.ObjectId, userId : Types.ObjectId, options? : object, sortData?: object | number, startIndex? : number, limit? : number) => {
+    followersList: async (friendId: Types.ObjectId, userId : Types.ObjectId, startIndex? : number, limit? : number) => {
         try {
           const followers = await Follow.aggregate([
                 {
@@ -117,7 +117,7 @@ const followHelper = {
                 {
                   $facet: {
                     totalRecord: [{ $count: "total" }],
-                    data: options ? [{ $skip: startIndex }, { $limit: limit }] : [],
+                    data: [{$sort : {"createdAt" : -1}},{ $skip: startIndex }, { $limit: limit }],
                   },
                 },
                 {
@@ -131,7 +131,7 @@ const followHelper = {
         }
     },
 
-    followingList: async (friendId: Types.ObjectId, userId : Types.ObjectId, options? : object, sortData?: object | number, startIndex? : number, limit? : number) => {
+    followingList: async (friendId: Types.ObjectId, userId : Types.ObjectId, startIndex? : number, limit? : number) => {
         try {
             const following = await Follow.aggregate([
                 {
@@ -197,7 +197,7 @@ const followHelper = {
                   {
                     $facet: {
                       totalRecord: [{ $count: "total" }],
-                      data: options ? [{ $skip: startIndex }, { $limit: limit }] : [],
+                      data: [{$sort : {"createdAt" : -1}},{ $skip: startIndex }, { $limit: limit }],
                     },
                   },
                   {
