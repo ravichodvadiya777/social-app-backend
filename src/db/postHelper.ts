@@ -7,7 +7,7 @@ import Post from "../model/postModel";
 const postHelper = {
   // Data find
   find: async (
-    query?: {user? : Types.ObjectId},
+    query?: { user?: Types.ObjectId },
     select?: string,
     sort: string = "createdAt"
   ) => {
@@ -106,7 +106,7 @@ const postHelper = {
       throw error;
     }
   },
-  
+
   deleteMany: async (query: object) => {
     try {
       const result = await Post.deleteMany(query, { new: true });
@@ -117,7 +117,11 @@ const postHelper = {
     }
   },
 
-  getAllPost: async (loginUserId? : Types.ObjectId, startIndex? : number, limit? : number) => {
+  getAllPost: async (
+    loginUserId?: Types.ObjectId,
+    startIndex?: number,
+    limit?: number
+  ) => {
     try {
       const post = await Post.aggregate([
         {
@@ -165,10 +169,7 @@ const postHelper = {
                       input: "$like",
                       as: "likeItem",
                       in: {
-                        $eq: [
-                          "$$likeItem.user",
-                          loginUserId,
-                        ],
+                        $eq: ["$$likeItem.user", loginUserId],
                       },
                     },
                   },
@@ -230,18 +231,22 @@ const postHelper = {
             comment: {
               $last: "$comment",
             },
-            isLike : {
+            isLike: {
               $last: "$isLike",
             },
             createdAt: {
-              $last: "$createdAt"
-            }
+              $last: "$createdAt",
+            },
           },
         },
         {
           $facet: {
             totalRecord: [{ $count: "total" }],
-            data:  [{$sort : {"createdAt" : -1}},{ $skip: startIndex }, { $limit: limit }]
+            data: [
+              { $sort: { createdAt: -1 } },
+              { $skip: startIndex },
+              { $limit: limit },
+            ],
           },
         },
         {
@@ -254,7 +259,7 @@ const postHelper = {
     }
   },
 
-  getPostByUserId: async (query? : {user? : Types.ObjectId}) => {
+  getPostByUserId: async (query?: { user?: Types.ObjectId }) => {
     try {
       const post = await Post.aggregate([
         {
@@ -305,10 +310,7 @@ const postHelper = {
                       input: "$like",
                       as: "likeItem",
                       in: {
-                        $eq: [
-                          "$$likeItem.user",
-                          query.user,
-                        ],
+                        $eq: ["$$likeItem.user", query.user],
                       },
                     },
                   },
@@ -370,25 +372,25 @@ const postHelper = {
             comment: {
               $last: "$comment",
             },
-            isLike : {
+            isLike: {
               $last: "$isLike",
             },
             createdAt: {
-              $last: "$createdAt"
-            }
+              $last: "$createdAt",
+            },
           },
         },
         {
-          $sort : {
-              createdAt: -1
-          }
+          $sort: {
+            createdAt: -1,
+          },
         },
-      ])
+      ]);
       return post;
     } catch (error) {
       console.log("Error retrieving post:", error);
     }
-  }
+  },
 };
 
 export default postHelper;

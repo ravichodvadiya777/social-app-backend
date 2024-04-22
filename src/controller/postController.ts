@@ -10,10 +10,8 @@ const postFieldName: string[] = ["title", "description", "photos"];
 // ========================================================== Start Post Flow ==========================================================
 export async function createPost(req: Request, res: Response) {
   try {
-    const {
-      description,
-      mention,
-    }: { description: string; mention: string[] } = req.body;
+    const { description, mention }: { description: string; mention: string[] } =
+      req.body;
     if (!req.user) {
       return global.sendResponse(
         res,
@@ -87,17 +85,24 @@ export async function getPostById(req: Request, res: Response) {
 
 export async function getAllPost(req: Request, res: Response) {
   try {
-  
     const page = Number(req.query.page) || 0;
     const limit = Number(req.query.limit) || 10;
-    const startIndex =  page * limit
-    
-    const post = await postHelper.getAllPost(new Types.ObjectId(req.user._id), startIndex, limit);
+    const startIndex = page * limit;
+
+    const post = await postHelper.getAllPost(
+      new Types.ObjectId(req.user._id),
+      startIndex,
+      limit
+    );
     const pages = Math.ceil(post[0].totalRecord / limit);
     const hasNextPage = Number(page) < pages - 1;
     const hasPreviousPage = Number(page) > 0;
-    
-    return global.sendResponse(res, 200, true, "Get Post successfully.", {post : post[0].data, hasNextPage, hasPreviousPage});
+
+    return global.sendResponse(res, 200, true, "Get Post successfully.", {
+      post: post[0].data,
+      hasNextPage,
+      hasPreviousPage,
+    });
   } catch (error) {
     console.log(error);
     return global.sendResponse(
@@ -178,10 +183,16 @@ export async function deletePost(req: Request, res: Response) {
 export async function getPostByUserId(req: Request, res: Response) {
   try {
     const userId = new Types.ObjectId(req.params.id);
-    
-    const postList = await postHelper.getPostByUserId({user : userId});
-    
-    return global.sendResponse(res, 200, true, "Get post Successfully", postList);
+
+    const postList = await postHelper.getPostByUserId({ user: userId });
+
+    return global.sendResponse(
+      res,
+      200,
+      true,
+      "Get post Successfully",
+      postList
+    );
   } catch (error) {
     console.log(error);
     return global.sendResponse(

@@ -1,7 +1,7 @@
 import mongoose, { ObjectId, SchemaDefinitionProperty, Types } from "mongoose";
 
 export type PostType = {
-  user: Types.ObjectId | SchemaDefinitionProperty<ObjectId, PostType>,
+  user: Types.ObjectId | SchemaDefinitionProperty<ObjectId, PostType>;
   description: string;
   photos: { url: string; type: string }[];
   mention: string[];

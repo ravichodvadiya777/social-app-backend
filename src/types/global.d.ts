@@ -1,5 +1,5 @@
 // /* eslint-disable no-unused-vars */
-import {  Types } from "mongoose";
+import { Types } from "mongoose";
 import { UserType } from "../model/userModel";
 
 declare global {
@@ -11,30 +11,30 @@ declare global {
     data?: object
   ) => void;
   // let sendResponse: SendResponse;
-  namespace NodeJS{
-    interface Global{
-      sendResponse: SendResponse
+  namespace NodeJS {
+    interface Global {
+      sendResponse: SendResponse;
     }
   }
 
   namespace Express {
-     interface Request {
-      user?: UserType,
+    interface Request {
+      user?: UserType;
       files?: {
         profileImg: string;
-        file? :  object | object[]
-      }
+        file?: object | object[];
+        story?: undefined;
+      };
     }
     interface Response {
       record?: {
         postId: number;
-        user? : Document,
-        photos? : {url : string, type : string}[],
-        _id? : Types.ObjectId
-      }
+        user?: Document;
+        photos?: { url: string; type: string }[];
+        _id?: Types.ObjectId;
+      };
     }
   }
-
 }
 
 export {};

@@ -9,10 +9,11 @@ import commentRouter from "./routes/commentRoutes";
 import likeRouter from "./routes/likeRoutes";
 import chatRouter from "./routes/chatRoutes";
 import { refreshToken } from "./middleware/verifyToken";
+import storyRouter from "./routes/storyRoutes";
 
 router.get("/refresh_token", async (req, res) => {
   const token = req.cookies["App"];
-  
+
   if (token) {
     refreshToken(token, res);
   } else {
@@ -32,6 +33,6 @@ router.use("/post", postRouter);
 router.use("/follow", followRouter);
 router.use("/comment", commentRouter);
 router.use("/like", likeRouter);
-
+router.use("/story", storyRouter);
 
 export default router;

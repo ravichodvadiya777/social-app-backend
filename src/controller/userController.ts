@@ -8,7 +8,17 @@ import { Types } from "mongoose";
 import postHelper from "../db/postHelper";
 import followHelper from "../db/followHelper";
 
-const fieldNames: string[] = ["name", "dob", "email", "bio", "country", "city", "address", "pincode", "username"];
+const fieldNames: string[] = [
+  "name",
+  "dob",
+  "email",
+  "bio",
+  "country",
+  "city",
+  "address",
+  "pincode",
+  "username",
+];
 
 // ========================================================== Start User Authentication Flow ==========================================================
 export async function addUser(req: Request, res: Response) {
@@ -48,7 +58,8 @@ export async function login(req: Request, res: Response) {
       return global.sendResponse(res, 401, false, "Incorrect password");
     } else {
       user.password = undefined;
-      if(!user.active)return global.sendResponse(res, 401, false, "User is not active");
+      if (!user.active)
+        return global.sendResponse(res, 401, false, "User is not active");
 
       const accessToken: string = await user.generateAuthToken(
         process.env.JWT_EXPIRE_IN
@@ -90,7 +101,7 @@ export async function login(req: Request, res: Response) {
   }
 }
 
-// token verify 
+// token verify
 export async function verifyToken(req: Request, res: Response) {
   try {
     const token: string = req.body.token;
@@ -114,7 +125,6 @@ export async function verifyToken(req: Request, res: Response) {
 
 // ========================================================== Start User Profile Flow ==========================================================
 
-
 // Get user Profile
 export async function getUserProfile(req: Request, res: Response) {
   try {
@@ -126,7 +136,10 @@ export async function getUserProfile(req: Request, res: Response) {
     }
 
     // const user = await userHelper.findOne({ _id : new Types.ObjectId(userId) });
-    const user = await userHelper.getUserProfile(new Types.ObjectId(userId), new Types.ObjectId(req.user._id));
+    const user = await userHelper.getUserProfile(
+      new Types.ObjectId(userId),
+      new Types.ObjectId(req.user._id)
+    );
     return global.sendResponse(res, 200, true, "Get user profile.", user[0]);
   } catch (error) {
     console.log(error);
@@ -138,7 +151,6 @@ export async function getUserProfile(req: Request, res: Response) {
     );
   }
 }
-
 
 // edit user profile
 export async function editUserProfile(req: Request, res: Response) {
@@ -165,8 +177,10 @@ export async function editUserProfile(req: Request, res: Response) {
 
     await userHelper
       .updateOne({ _id: userId }, req.user)
-      .then(async() => {
-        const user = await userHelper.findOne({_id : new Types.ObjectId(userId)});
+      .then(async () => {
+        const user = await userHelper.findOne({
+          _id: new Types.ObjectId(userId),
+        });
         // delete user.password;
         return global.sendResponse(res, 200, true, "Edit success!", user);
       })
@@ -182,28 +196,35 @@ export async function editUserProfile(req: Request, res: Response) {
   }
 }
 
-// change password 
+// change password
 export async function changePassword(req: Request, res: Response) {
   try {
-    const {oldPassword, newPassword} = req.body;
+    const { oldPassword, newPassword } = req.body;
     const userId = req.user._id;
-    
-    const user = await userHelper.findOne({ _id: new Types.ObjectId(req.user._id) }, "+password");
-    
+
+    const user = await userHelper.findOne(
+      { _id: new Types.ObjectId(req.user._id) },
+      "+password"
+    );
+
     //Checking old password is correct or not
     const checkOldPass = await bcrypt.compare(oldPassword, user.password);
-    
+
     if (!checkOldPass) {
-      return global.sendResponse(res, 401, false, 'Wrong current password');
+      return global.sendResponse(res, 401, false, "Wrong current password");
     }
 
     //Hashing the new password
     const hashedPassword = await bcrypt.hash(newPassword || null, 10);
 
     //Update the new password to database
-    await userHelper.updateOne({_id : userId},{password : hashedPassword})
-    return global.sendResponse(res,200, true,'Password has been changed successfully.');
-
+    await userHelper.updateOne({ _id: userId }, { password: hashedPassword });
+    return global.sendResponse(
+      res,
+      200,
+      true,
+      "Password has been changed successfully."
+    );
   } catch (error) {
     console.log(error);
     return global.sendResponse(
@@ -219,12 +240,14 @@ export async function changePassword(req: Request, res: Response) {
 export async function chekUserName(req: Request, res: Response) {
   try {
     const username = req.query.username.toString();
-    
-    const user = await userHelper.findOne({username : username});
-    if(user){
-      return global.sendResponse(res,200,true, "Username already exists.",{username : false})  
+
+    const user = await userHelper.findOne({ username: username });
+    if (user) {
+      return global.sendResponse(res, 200, true, "Username already exists.", {
+        username: false,
+      });
     }
-    return global.sendResponse(res,200,true, "Ok.",{username : true});
+    return global.sendResponse(res, 200, true, "Ok.", { username: true });
   } catch (error) {
     console.log(error);
     return global.sendResponse(
@@ -239,11 +262,14 @@ export async function chekUserName(req: Request, res: Response) {
 // search by user name
 export async function searchByUserName(req: Request, res: Response) {
   try {
-    let users = await  userHelper.find({username : { $regex: req.body.username, $options: "i" }}, "username profileImg name", );
-    if(!req.body.username){
-      users = []
+    let users = await userHelper.find(
+      { username: { $regex: req.body.username, $options: "i" } },
+      "username profileImg name"
+    );
+    if (!req.body.username) {
+      users = [];
     }
-    return global.sendResponse(res,200, true, "Search Successfully",users);
+    return global.sendResponse(res, 200, true, "Search Successfully", users);
   } catch (error) {
     console.log(error);
     return global.sendResponse(
@@ -265,7 +291,9 @@ export async function deleteAccount(req: Request, res: Response) {
     await postHelper.deleteMany({ user: userId });
 
     // remove follower tab and following tab
-    await followHelper.deleteMany({$or : [{user : userId},{follow : userId}]});
+    await followHelper.deleteMany({
+      $or: [{ user: userId }, { follow: userId }],
+    });
 
     // remove notification pending
     return global.sendResponse(res, 200, true, "Account deleted successfully.");
@@ -276,7 +304,7 @@ export async function deleteAccount(req: Request, res: Response) {
       400,
       false,
       "Something not right, please try again."
-    )
+    );
   }
 }
 // ========================================================== End User Profile Flow ==========================================================
