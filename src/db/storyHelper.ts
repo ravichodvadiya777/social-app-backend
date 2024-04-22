@@ -59,16 +59,50 @@ const storyHelper = {
           },
         },
         {
+          $group: {
+            _id: null,
+            users: {
+              $push: "$follow",
+            },
+          },
+        },
+        {
+          $set: {
+            users: {
+              $concatArrays: ["$users", [userId]],
+            },
+          },
+        },
+        {
           $lookup: {
             from: "stories",
-            localField: "follow",
+            localField: "users",
             foreignField: "user",
             as: "stories",
           },
         },
         {
+          $unwind: {
+            path: "$stories",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $replaceRoot: {
+            newRoot: "$stories",
+          },
+        },
+        {
+          $group: {
+            _id: "$user",
+            story: {
+              $push: "$story",
+            },
+          },
+        },
+        {
           $match: {
-            stories: {
+            story: {
               $gt: {
                 $size: 0,
               },
@@ -78,7 +112,7 @@ const storyHelper = {
         {
           $lookup: {
             from: "users",
-            localField: "follow",
+            localField: "_id",
             foreignField: "_id",
             as: "follow_friend",
             pipeline: [
@@ -90,6 +124,34 @@ const storyHelper = {
                 },
               },
             ],
+          },
+        },
+        {
+          $addFields: {
+            loginUser: {
+              $cond: [
+                {
+                  $in: [userId, "$follow_friend._id"],
+                },
+                true,
+                false,
+              ],
+            },
+          },
+        },
+        {
+          $sort: {
+            loginUser: -1,
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            story: 1,
+            follow_friend: {
+              $first: "$follow_friend",
+            },
+            loginUser: 1,
           },
         },
       ]);

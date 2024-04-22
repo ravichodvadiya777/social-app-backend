@@ -67,7 +67,6 @@ export async function createStory(req: Request, res: Response) {
     const originalDate = new Date(story.createdAt);
 
     originalDate.setHours(originalDate.getHours() + 24);
-    // originalDate.setMinutes(originalDate.getMinutes() + 1);
     const expiryDate = originalDate.toISOString();
 
     const trend = story._id;
