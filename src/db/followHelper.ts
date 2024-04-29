@@ -237,6 +237,13 @@ const followHelper = {
 
   suggestedFriends: async (userId: Types.ObjectId) => {
     try {
+      const userFollowings = (await Follow.find({ user: userId })).map(
+        (item) => item.follow
+      );
+      const withUserFollowing = [...userFollowings, userId];
+      const userFollowers = (await Follow.find({ follow: userId })).map(
+        (item) => item.user
+      );
       const suggestedFriends = await Follow.aggregate([
         {
           $match: {
@@ -264,9 +271,7 @@ const followHelper = {
                   pipeline: [
                     {
                       $match: {
-                        follow: {
-                          $ne: userId,
-                        },
+                        follow: { $nin: withUserFollowing },
                       },
                     },
                     {
@@ -280,6 +285,13 @@ const followHelper = {
                             $project: {
                               username: 1,
                               profileImg: 1,
+                              followBack: {
+                                $cond: [
+                                  { $in: ["$_id", userFollowers] },
+                                  true,
+                                  false,
+                                ],
+                              },
                             },
                           },
                         ],
@@ -304,6 +316,9 @@ const followHelper = {
                         foreignField: "user",
                         as: "followers",
                         pipeline: [
+                          {
+                            $match: { follow: { $in: userFollowings } },
+                          },
                           {
                             $lookup: {
                               from: "users",
@@ -331,34 +346,44 @@ const followHelper = {
                               newRoot: "$follower_info",
                             },
                           },
-                          {
-                            $lookup: {
-                              from: "follows",
-                              localField: "_id",
-                              foreignField: "user",
-                              as: "follows",
-                              pipeline: [
-                                {
-                                  $match: {
-                                    follow: userId,
-                                  },
-                                },
-                              ],
-                            },
-                          },
-                          {
-                            $addFields: {
-                              follows: {
-                                $size: "$follows",
-                              },
-                            },
-                          },
+                          // {
+                          //   $lookup: {
+                          //     from: "follows",
+                          //     localField: "_id",
+                          //     foreignField: "user",
+                          //     as: "follows",
+                          //     pipeline: [
+                          //       {
+                          //         $match: {
+                          //           follow: userId,
+                          //         },
+                          //       },
+                          //     ],
+                          //   },
+                          // },
+                          // {
+                          //   $match: {
+                          //     $expr: {
+                          //       $gt: [{ $size: "$follows" }, 0],
+                          //     },
+                          //   },
+                          // },
+                          { $limit: 3 },
+                        ],
+                      },
+                    },
+                    {
+                      $lookup: {
+                        from: "follows",
+                        localField: "_id",
+                        foreignField: "user",
+                        as: "mutual_count",
+                        pipeline: [
                           {
                             $match: {
-                              follows: { $gt: 0 },
+                              follow: { $in: userFollowings },
                             },
                           },
-                          { $limit: 3 },
                         ],
                       },
                     },
@@ -367,11 +392,15 @@ const followHelper = {
                         followers_count: {
                           $size: "$followers",
                         },
+                        mutual_count: {
+                          $size: "$mutual_count",
+                        },
                       },
                     },
                     {
                       $match: {
                         followers_count: { $gt: 0 },
+                        mutual_count: { $gt: 0 },
                       },
                     },
                     { $limit: 2 },
@@ -385,6 +414,13 @@ const followHelper = {
           $unwind: {
             path: "$follower_info",
             preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $match: {
+            $expr: {
+              $gt: [{ $size: "$follower_info.followers" }, 0],
+            },
           },
         },
         {
@@ -422,6 +458,8 @@ const followHelper = {
                   profileImg: {
                     $last: "$followers.profileImg",
                   },
+                  followBack: { $last: "$followers.followBack" },
+                  mutual_count: { $last: "$followers.mutual_count" },
                   mutual: {
                     $last: "$followers.followers",
                   },

@@ -259,7 +259,11 @@ const postHelper = {
     }
   },
 
-  getPostByUserId: async (query?: { user?: Types.ObjectId }) => {
+  getPostByUserId: async (
+    query?: { user?: Types.ObjectId },
+    startIndex?: number,
+    limit?: number
+  ) => {
     try {
       const post = await Post.aggregate([
         {
@@ -381,9 +385,17 @@ const postHelper = {
           },
         },
         {
-          $sort: {
-            createdAt: -1,
+          $facet: {
+            totalRecord: [{ $count: "total" }],
+            data: [
+              { $sort: { createdAt: -1 } },
+              { $skip: startIndex },
+              { $limit: limit },
+            ],
           },
+        },
+        {
+          $project: { data: 1, totalRecord: { $first: "$totalRecord.total" } },
         },
       ]);
       return post;

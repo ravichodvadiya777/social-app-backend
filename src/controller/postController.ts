@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-// import Post from "../model/postModel";
 import postHelper from "../db/postHelper";
 import { Types } from "mongoose";
 import { fileUploading } from "../middleware/fileUploading";
@@ -94,6 +93,7 @@ export async function getAllPost(req: Request, res: Response) {
       startIndex,
       limit
     );
+
     const pages = Math.ceil(post[0].totalRecord / limit);
     const hasNextPage = Number(page) < pages - 1;
     const hasPreviousPage = Number(page) > 0;
@@ -183,16 +183,25 @@ export async function deletePost(req: Request, res: Response) {
 export async function getPostByUserId(req: Request, res: Response) {
   try {
     const userId = new Types.ObjectId(req.params.id);
+    const page = Number(req.query.page) || 0;
+    const limit = Number(req.query.limit) || 10;
+    const startIndex = page * limit;
 
-    const postList = await postHelper.getPostByUserId({ user: userId });
-
-    return global.sendResponse(
-      res,
-      200,
-      true,
-      "Get post Successfully",
-      postList
+    const postList = await postHelper.getPostByUserId(
+      { user: userId },
+      startIndex,
+      limit
     );
+
+    const pages = Math.ceil(postList[0].totalRecord / limit);
+    const hasNextPage = Number(page) < pages - 1;
+    const hasPreviousPage = Number(page) > 0;
+
+    return global.sendResponse(res, 200, true, "Get post Successfully", {
+      post: postList[0].data,
+      hasNextPage,
+      hasPreviousPage,
+    });
   } catch (error) {
     console.log(error);
     return global.sendResponse(

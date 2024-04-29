@@ -148,7 +148,7 @@ export async function suggestedFriends(req: Request, res: Response) {
       200,
       true,
       "Get suggested friend successfully.",
-      suggestedFriendsList
+      suggestedFriendsList[0]
     );
   } catch (error) {
     console.log(error);
