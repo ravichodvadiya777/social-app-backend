@@ -7,6 +7,7 @@ export type ChatType = {
   type: number;
   read: boolean;
   conversationId: string;
+  createdAt: Date;
 };
 const ChatModel = new mongoose.Schema<ChatType>(
   {

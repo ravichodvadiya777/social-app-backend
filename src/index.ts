@@ -15,6 +15,9 @@ import { restart } from "./helper/restartServer";
 
 // config & db
 import "./db/db";
+import chatSettingHelper from "./db/chatSettingHelper";
+import userHelper from "./db/userHelper";
+import "./cron";
 
 const cors_urls = [
   "http://localhost:3001",
@@ -78,11 +81,41 @@ io.on("connection", (socket) => {
       data.read = true;
     }
     socket.to(data.receiver).emit("sendMessage", data);
+    const chatConversation = await chatSettingHelper.findOne({
+      conversationId: data.conversationId,
+    });
     await chetHelper.insertOne(data);
+
+    if (!chatConversation) {
+      const sender = await userHelper.findOne(
+        { _id: data.sender },
+        "name username profileImg"
+      );
+      const newChatUser = {
+        _id: data.sender,
+        conversationId: data.conversationId,
+        username: sender.username,
+        profileImg: sender.profileImg,
+        name: sender.name,
+        unread_msg: 1,
+        delete24View: false,
+        deleteAfterView: false,
+      };
+      socket.to(data.receiver).emit("newChatUser", newChatUser);
+      await chatSettingHelper.insertOne({
+        conversationId: data.conversationId,
+        user1: data.sender,
+        user2: data.receiver,
+      });
+    }
   });
 
   socket.on("onScreen", async (data) => {
     global.Onscreen[data.userId] = data.screenId;
+  });
+
+  socket.on("back", (data) => {
+    if (data.userId) delete global.Onscreen[data.userId];
   });
 
   socket.on("typing", (data) => {

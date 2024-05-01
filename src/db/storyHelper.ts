@@ -82,6 +82,15 @@ const storyHelper = {
           },
         },
         {
+          $match: {
+            stories: {
+              $gt: {
+                $size: 0,
+              },
+            },
+          },
+        },
+        {
           $unwind: {
             path: "$stories",
             preserveNullAndEmptyArrays: true,
