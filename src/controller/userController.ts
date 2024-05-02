@@ -7,6 +7,9 @@ import userHelper from "../db/userHelper";
 import { Types } from "mongoose";
 import postHelper from "../db/postHelper";
 import followHelper from "../db/followHelper";
+import Post from "../model/postModel";
+import commentHelper from "../db/commentHelper";
+import likeHelper from "../db/likeHelper";
 
 const fieldNames: string[] = [
   "name",
@@ -288,6 +291,13 @@ export async function deleteAccount(req: Request, res: Response) {
     await userHelper.delete({ _id: userId });
     // delete post
     // remove post
+    const postIds = (await Post.find({ user: userId }).select("_id")).map(
+      (post) => post._id
+    );
+    // delete post comments
+    await commentHelper.deleteMany({ postId: { $in: postIds } });
+    // delete post likes
+    await likeHelper.deleteMany({ postId: { $in: postIds } });
     await postHelper.deleteMany({ user: userId });
 
     // remove follower tab and following tab

@@ -41,6 +41,16 @@ const likeHelper = {
     }
   },
 
+  deleteMany: async (query: object) => {
+    try {
+      const result = await Like.deleteMany(query, { new: true });
+      return result;
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      throw error;
+    }
+  },
+
   getLikeById: async (
     itemId: Types.ObjectId,
     userId: Types.ObjectId,

@@ -66,6 +66,16 @@ const commentHelper = {
     }
   },
 
+  deleteMany: async (query: object) => {
+    try {
+      const result = await Comment.deleteMany(query, { new: true });
+      return result;
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      throw error;
+    }
+  },
+
   getCommentByPostId: async (
     postId: Types.ObjectId,
     userId: Types.ObjectId,

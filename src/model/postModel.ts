@@ -28,6 +28,7 @@ const PostModel = new mongoose.Schema<PostType>(
           },
         },
       ],
+      required: true,
     },
     mention: {
       type: [mongoose.Types.ObjectId],

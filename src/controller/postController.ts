@@ -9,8 +9,8 @@ const postFieldName: string[] = ["title", "description", "photos"];
 // ========================================================== Start Post Flow ==========================================================
 export async function createPost(req: Request, res: Response) {
   try {
-    const { description, mention }: { description: string; mention: string[] } =
-      req.body;
+    const { description }: { description: string } = req.body;
+    const mention = req.body.mention.split(",");
     if (!req.user) {
       return global.sendResponse(
         res,

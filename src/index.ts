@@ -21,8 +21,8 @@ import "./cron";
 
 const cors_urls = [
   "http://localhost:3001",
-  "https://549a-2405-201-2024-a1f6-ac16-b76-5212-fbb6.ngrok-free.app",
   "http://localhost:4001",
+  "https://qddfgq51-4001.inc1.devtunnels.ms",
 ];
 
 app.use(
