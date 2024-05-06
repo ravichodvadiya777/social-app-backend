@@ -10,6 +10,8 @@ import likeRouter from "./routes/likeRoutes";
 import chatRouter from "./routes/chatRoutes";
 import { refreshToken } from "./middleware/verifyToken";
 import storyRouter from "./routes/storyRoutes";
+import notificationRouter from "./routes/notificationRoutes";
+import settingRouter from "./routes/settingRoutes";
 
 router.get("/refresh_token", async (req, res) => {
   const token = req.cookies["App"];
@@ -17,13 +19,7 @@ router.get("/refresh_token", async (req, res) => {
   if (token) {
     refreshToken(token, res);
   } else {
-    global.sendResponse(
-      res,
-      400,
-      false,
-      "Your session expired, try to login.",
-      { key: "logout" }
-    );
+    global.sendResponse(res, 400, false, "Your session expired, try to login.", { key: "logout" });
   }
 });
 
@@ -34,5 +30,7 @@ router.use("/follow", followRouter);
 router.use("/comment", commentRouter);
 router.use("/like", likeRouter);
 router.use("/story", storyRouter);
+router.use("/notification", notificationRouter);
+router.use("/setting", settingRouter);
 
 export default router;

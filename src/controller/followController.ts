@@ -3,6 +3,9 @@ import { Request, Response } from "express";
 import followHelper from "../db/followHelper";
 import { Types } from "mongoose";
 import { FollowType } from "../model/followModel";
+import { NotificationType } from "../model/notificationModel";
+import notificationHelper from "../db/notificationHelper";
+import settingHelper from "../db/settingHelper";
 
 // ========================================================== Start follow Flow ==========================================================
 // follow
@@ -26,15 +29,22 @@ export async function follow(req: Request, res: Response) {
 
     const follow = await followHelper.insertOne(obj);
 
+    const followNoti = await settingHelper.get(new Types.ObjectId(followId));
+    if (req.user._id.toString() !== req.body.follow.toString() && followNoti.follow) {
+      const notificationObj: NotificationType = {
+        sender: userId,
+        receiver: followId,
+        itemId: followId,
+        text: "start following you.",
+        type: "follow",
+      };
+      await notificationHelper.insertOne(notificationObj);
+    }
+
     return global.sendResponse(res, 201, true, "Follow successfully.", follow);
   } catch (error) {
     console.log(error);
-    return global.sendResponse(
-      res,
-      400,
-      false,
-      "Something not right, please try again."
-    );
+    return global.sendResponse(res, 400, false, "Something not right, please try again.");
   }
 }
 
@@ -53,16 +63,20 @@ export async function unfollow(req: Request, res: Response) {
       return global.sendResponse(res, 409, false, "You can't unfollow");
     }
     await followHelper.deleteOne(obj);
-
+    if (req.user._id.toString() !== req.body.follow.toString()) {
+      const notificationObj: NotificationType = {
+        sender: userId,
+        receiver: followId,
+        itemId: followId,
+        text: "start following you.",
+        type: "follow",
+      };
+      await notificationHelper.deleteOne(notificationObj);
+    }
     return global.sendResponse(res, 200, true, "Unfollow successfully.");
   } catch (error) {
     console.log(error);
-    return global.sendResponse(
-      res,
-      400,
-      false,
-      "Something not right, please try again."
-    );
+    return global.sendResponse(res, 400, false, "Something not right, please try again.");
   }
 }
 
@@ -76,12 +90,7 @@ export async function followersList(req: Request, res: Response) {
     const limit = Number(req.query.limit) || 10;
     const startIndex = page * limit;
 
-    const followers = await followHelper.followersList(
-      friendId,
-      userId,
-      startIndex,
-      limit
-    );
+    const followers = await followHelper.followersList(friendId, userId, startIndex, limit);
     const pages = Math.ceil(followers[0].totalRecord / limit);
     const hasNextPage = Number(page) < pages - 1;
     const hasPreviousPage = Number(page) > 0;
@@ -92,12 +101,7 @@ export async function followersList(req: Request, res: Response) {
     });
   } catch (error) {
     console.log(error);
-    return global.sendResponse(
-      res,
-      400,
-      false,
-      "Something not right, please try again."
-    );
+    return global.sendResponse(res, 400, false, "Something not right, please try again.");
   }
 }
 
@@ -111,12 +115,7 @@ export async function followingList(req: Request, res: Response) {
     const limit = Number(req.query.limit) || 10;
     const startIndex = page * limit;
 
-    const following = await followHelper.followingList(
-      friendId,
-      userId,
-      startIndex,
-      limit
-    );
+    const following = await followHelper.followingList(friendId, userId, startIndex, limit);
 
     const pages = Math.ceil(following[0].totalRecord / limit);
     const hasNextPage = Number(page) < pages - 1;
@@ -129,12 +128,7 @@ export async function followingList(req: Request, res: Response) {
     });
   } catch (error) {
     console.log(error);
-    return global.sendResponse(
-      res,
-      400,
-      false,
-      "Something not right, please try again."
-    );
+    return global.sendResponse(res, 400, false, "Something not right, please try again.");
   }
 }
 
@@ -143,21 +137,10 @@ export async function suggestedFriends(req: Request, res: Response) {
   try {
     const userId = new Types.ObjectId(req.user._id);
     const suggestedFriendsList = await followHelper.suggestedFriends(userId);
-    return global.sendResponse(
-      res,
-      200,
-      true,
-      "Get suggested friend successfully.",
-      suggestedFriendsList[0]
-    );
+    return global.sendResponse(res, 200, true, "Get suggested friend successfully.", suggestedFriendsList[0]);
   } catch (error) {
     console.log(error);
-    return global.sendResponse(
-      res,
-      400,
-      false,
-      "Something not right, please try again."
-    );
+    return global.sendResponse(res, 400, false, "Something not right, please try again.");
   }
 }
 

@@ -29,7 +29,7 @@ const commentHelper = {
   },
 
   // FindOne
-  findOne: async (query?: { _id?: Types.ObjectId }, select?: string) => {
+  findOne: async (query?: { _id?: Types.ObjectId, postId?: Types.ObjectId }, select?: string) => {
     try {
       let queryBuilder = Comment.findOne(query);
 

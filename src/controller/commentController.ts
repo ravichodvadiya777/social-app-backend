@@ -2,6 +2,11 @@ import { Request, Response } from "express";
 import commentHelper from "../db/commentHelper";
 import { Types } from "mongoose";
 import { CommentType } from "../model/commentModel";
+import notificationHelper from "../db/notificationHelper";
+import postHelper from "../db/postHelper";
+import { NotificationType } from "../model/notificationModel";
+import { PostType } from "../model/postModel";
+import settingHelper from "../db/settingHelper";
 
 // ========================================================== Start Comment Flow ==========================================================
 // create a new commet
@@ -17,23 +22,27 @@ export async function addComment(req: Request, res: Response) {
     if (commentId) {
       obj.commentId = new Types.ObjectId(commentId);
     }
+    const post: PostType = await postHelper.findOne({ _id: new Types.ObjectId(postId) }, "user");
+    if (!post) {
+      return global.sendResponse(res, 400, false, "post not found.");
+    }
 
     const comment = await commentHelper.insertOne(obj);
-    return global.sendResponse(
-      res,
-      201,
-      true,
-      "Comment add successfully.",
-      comment
-    );
+    const commentNoti = await settingHelper.get(new Types.ObjectId(post.user.toString()));
+    if (req.user._id.toString() !== post.user.toString() && commentNoti.comment) {
+      const notificationObj: NotificationType = {
+        sender: new Types.ObjectId(req.user._id),
+        receiver: post.user,
+        itemId: new Types.ObjectId(postId),
+        text: "recently comment on your post.",
+        type: "comment",
+      };
+      await notificationHelper.insertOne(notificationObj);
+    }
+    return global.sendResponse(res, 201, true, "Comment add successfully.", comment);
   } catch (error) {
     console.log(error);
-    return global.sendResponse(
-      res,
-      400,
-      false,
-      "Something not right, please try again."
-    );
+    return global.sendResponse(res, 400, false, "Something not right, please try again.");
   }
 }
 
@@ -44,12 +53,7 @@ export async function getCommentByPostId(req: Request, res: Response) {
     const limit = Number(req.query.limit) || 10;
     const startIndex = page * limit;
 
-    const comment = await commentHelper.getCommentByPostId(
-      postId,
-      new Types.ObjectId(req.user._id),
-      startIndex,
-      limit
-    );
+    const comment = await commentHelper.getCommentByPostId(postId, new Types.ObjectId(req.user._id), startIndex, limit);
     const pages = Math.ceil(comment[0].totalRecord / limit);
     const hasNextPage = Number(page) < pages - 1;
     const hasPreviousPage = Number(page) > 0;
@@ -60,12 +64,7 @@ export async function getCommentByPostId(req: Request, res: Response) {
     });
   } catch (error) {
     console.log(error);
-    return global.sendResponse(
-      res,
-      400,
-      false,
-      "Something not right, please try again."
-    );
+    return global.sendResponse(res, 400, false, "Something not right, please try again.");
   }
 }
 
@@ -76,12 +75,7 @@ export async function getSubCommentByCommentId(req: Request, res: Response) {
     const limit = Number(req.query.limit) || 10;
     const startIndex = page * limit;
 
-    const comment = await commentHelper.getSubCommentByCommentId(
-      commentId,
-      new Types.ObjectId(req.user._id),
-      startIndex,
-      limit
-    );
+    const comment = await commentHelper.getSubCommentByCommentId(commentId, new Types.ObjectId(req.user._id), startIndex, limit);
     const pages = Math.ceil(comment[0].totalRecord / limit);
     const hasNextPage = Number(page) < pages - 1;
     const hasPreviousPage = Number(page) > 0;
@@ -93,12 +87,7 @@ export async function getSubCommentByCommentId(req: Request, res: Response) {
     });
   } catch (error) {
     console.log(error);
-    return global.sendResponse(
-      res,
-      400,
-      false,
-      "Something not right, please try again."
-    );
+    return global.sendResponse(res, 400, false, "Something not right, please try again.");
   }
 }
 

@@ -19,11 +19,7 @@ import chatSettingHelper from "./db/chatSettingHelper";
 import userHelper from "./db/userHelper";
 import "./cron";
 
-const cors_urls = [
-  "http://localhost:3001",
-  "http://localhost:4001",
-  "https://qddfgq51-4001.inc1.devtunnels.ms",
-];
+const cors_urls = ["http://localhost:3001", "http://localhost:4001", "https://qddfgq51-4001.inc1.devtunnels.ms"];
 
 app.use(
   cors({
@@ -53,6 +49,7 @@ const io = new socket.Server(server, {
     }
   },
 });
+global.io = io;
 global.Onscreen = {};
 global.onlineUsers = [];
 const socketUsers = new Map();
@@ -87,10 +84,7 @@ io.on("connection", (socket) => {
     await chetHelper.insertOne(data);
 
     if (!chatConversation) {
-      const sender = await userHelper.findOne(
-        { _id: data.sender },
-        "name username profileImg"
-      );
+      const sender = await userHelper.findOne({ _id: data.sender }, "name username profileImg");
       const newChatUser = {
         _id: data.sender,
         conversationId: data.conversationId,
@@ -119,9 +113,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("typing", (data) => {
-    socket
-      .to(global.Onscreen[data.userId])
-      .emit("typing", { typing: data.typing });
+    socket.to(global.Onscreen[data.userId]).emit("typing", { typing: data.typing });
   });
 
   socket.on("callRequest", (data) => {

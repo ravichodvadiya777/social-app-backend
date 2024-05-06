@@ -4,7 +4,15 @@ import { Types } from "mongoose";
 
 // Define helper functions to interact with the database
 const likeHelper = {
-  findOne: async (query?: LikeType, select?: string) => {
+  findOne: async (
+    query?: {
+      user?: Types.ObjectId;
+      postId?: Types.ObjectId;
+      itemId?: Types.ObjectId;
+      type?: number;
+    },
+    select?: string
+  ) => {
     try {
       let queryBuilder = Like.findOne(query);
 
@@ -51,12 +59,7 @@ const likeHelper = {
     }
   },
 
-  getLikeById: async (
-    itemId: Types.ObjectId,
-    userId: Types.ObjectId,
-    startIndex?: number,
-    limit?: number
-  ) => {
+  getLikeById: async (itemId: Types.ObjectId, userId: Types.ObjectId, startIndex?: number, limit?: number) => {
     try {
       const like = await Like.aggregate([
         {
@@ -137,11 +140,7 @@ const likeHelper = {
         {
           $facet: {
             totalRecord: [{ $count: "total" }],
-            data: [
-              { $sort: { createdAt: -1 } },
-              { $skip: startIndex },
-              { $limit: limit },
-            ],
+            data: [{ $sort: { createdAt: -1 } }, { $skip: startIndex }, { $limit: limit }],
           },
         },
         {

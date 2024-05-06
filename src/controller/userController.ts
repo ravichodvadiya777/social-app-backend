@@ -10,18 +10,9 @@ import followHelper from "../db/followHelper";
 import Post from "../model/postModel";
 import commentHelper from "../db/commentHelper";
 import likeHelper from "../db/likeHelper";
+import settingHelper from "../db/settingHelper";
 
-const fieldNames: string[] = [
-  "name",
-  "dob",
-  "email",
-  "bio",
-  "country",
-  "city",
-  "address",
-  "pincode",
-  "username",
-];
+const fieldNames: string[] = ["name", "dob", "email", "bio", "country", "city", "address", "pincode", "username"];
 
 // ========================================================== Start User Authentication Flow ==========================================================
 export async function addUser(req: Request, res: Response) {
@@ -33,21 +24,11 @@ export async function addUser(req: Request, res: Response) {
     }
     req.body.password = await bcrypt.hash(req.body.password || null, 10);
     const addData = await userHelper.insertOne(req.body);
-    return global.sendResponse(
-      res,
-      201,
-      true,
-      "User add successfully.",
-      addData
-    );
+    await settingHelper.insertOne(new Types.ObjectId(addData._id));
+    return global.sendResponse(res, 201, true, "User add successfully.", addData);
   } catch (error) {
     console.log(error);
-    return global.sendResponse(
-      res,
-      400,
-      false,
-      "Something not right, please try again."
-    );
+    return global.sendResponse(res, 400, false, "Something not right, please try again.");
   }
 }
 
@@ -61,12 +42,9 @@ export async function login(req: Request, res: Response) {
       return global.sendResponse(res, 401, false, "Incorrect password");
     } else {
       user.password = undefined;
-      if (!user.active)
-        return global.sendResponse(res, 401, false, "User is not active");
+      if (!user.active) return global.sendResponse(res, 401, false, "User is not active");
 
-      const accessToken: string = await user.generateAuthToken(
-        process.env.JWT_EXPIRE_IN
-      ); // 5 mini
+      const accessToken: string = await user.generateAuthToken(process.env.JWT_EXPIRE_IN); // 5 mini
 
       const refreshToken: string = await user.generateAuthToken(); // main
       if (user._doc) {
@@ -95,12 +73,7 @@ export async function login(req: Request, res: Response) {
     }
   } catch (error) {
     console.log(error);
-    return global.sendResponse(
-      res,
-      400,
-      false,
-      "Something not right, please try again."
-    );
+    return global.sendResponse(res, 400, false, "Something not right, please try again.");
   }
 }
 
@@ -115,13 +88,7 @@ export async function verifyToken(req: Request, res: Response) {
     return global.sendResponse(res, 200, true, "Ok.");
   } catch (error) {
     console.log(error);
-    return global.sendResponse(
-      res,
-      400,
-      false,
-      "Invalid token. Please try logging in again.",
-      { key: "logout" }
-    );
+    return global.sendResponse(res, 400, false, "Invalid token. Please try logging in again.", { key: "logout" });
   }
 }
 // ========================================================== End User Authentication Flow ==========================================================
@@ -139,19 +106,11 @@ export async function getUserProfile(req: Request, res: Response) {
     }
 
     // const user = await userHelper.findOne({ _id : new Types.ObjectId(userId) });
-    const user = await userHelper.getUserProfile(
-      new Types.ObjectId(userId),
-      new Types.ObjectId(req.user._id)
-    );
+    const user = await userHelper.getUserProfile(new Types.ObjectId(userId), new Types.ObjectId(req.user._id));
     return global.sendResponse(res, 200, true, "Get user profile.", user[0]);
   } catch (error) {
     console.log(error);
-    return global.sendResponse(
-      res,
-      400,
-      false,
-      "Something not right, please try again."
-    );
+    return global.sendResponse(res, 400, false, "Something not right, please try again.");
   }
 }
 
@@ -161,17 +120,11 @@ export async function editUserProfile(req: Request, res: Response) {
     const userId = req.params.id;
     if (req.user) {
       if (userId !== req.user._id.toString()) {
-        return global.sendResponse(
-          res,
-          403,
-          false,
-          "Not authorized to access this route."
-        );
+        return global.sendResponse(res, 403, false, "Not authorized to access this route.");
       }
     }
     fieldNames.forEach((field) => {
-      if (req.body[field] != null && req.user)
-        req.user[field] = req.body[field];
+      if (req.body[field] != null && req.user) req.user[field] = req.body[field];
     });
 
     if (req.files) {
@@ -190,12 +143,7 @@ export async function editUserProfile(req: Request, res: Response) {
       .catch((err) => console.log(err));
   } catch (error) {
     console.log(error);
-    return global.sendResponse(
-      res,
-      400,
-      false,
-      "Something not right, please try again."
-    );
+    return global.sendResponse(res, 400, false, "Something not right, please try again.");
   }
 }
 
@@ -205,10 +153,7 @@ export async function changePassword(req: Request, res: Response) {
     const { oldPassword, newPassword } = req.body;
     const userId = req.user._id;
 
-    const user = await userHelper.findOne(
-      { _id: new Types.ObjectId(req.user._id) },
-      "+password"
-    );
+    const user = await userHelper.findOne({ _id: new Types.ObjectId(req.user._id) }, "+password");
 
     //Checking old password is correct or not
     const checkOldPass = await bcrypt.compare(oldPassword, user.password);
@@ -222,20 +167,10 @@ export async function changePassword(req: Request, res: Response) {
 
     //Update the new password to database
     await userHelper.updateOne({ _id: userId }, { password: hashedPassword });
-    return global.sendResponse(
-      res,
-      200,
-      true,
-      "Password has been changed successfully."
-    );
+    return global.sendResponse(res, 200, true, "Password has been changed successfully.");
   } catch (error) {
     console.log(error);
-    return global.sendResponse(
-      res,
-      400,
-      false,
-      "Something not right, please try again."
-    );
+    return global.sendResponse(res, 400, false, "Something not right, please try again.");
   }
 }
 
@@ -253,34 +188,21 @@ export async function chekUserName(req: Request, res: Response) {
     return global.sendResponse(res, 200, true, "Ok.", { username: true });
   } catch (error) {
     console.log(error);
-    return global.sendResponse(
-      res,
-      400,
-      false,
-      "Something not right, please try again."
-    );
+    return global.sendResponse(res, 400, false, "Something not right, please try again.");
   }
 }
 
 // search by user name
 export async function searchByUserName(req: Request, res: Response) {
   try {
-    let users = await userHelper.find(
-      { username: { $regex: req.body.username, $options: "i" } },
-      "username profileImg name"
-    );
+    let users = await userHelper.find({ username: { $regex: req.body.username, $options: "i" } }, "username profileImg name");
     if (!req.body.username) {
       users = [];
     }
     return global.sendResponse(res, 200, true, "Search Successfully", users);
   } catch (error) {
     console.log(error);
-    return global.sendResponse(
-      res,
-      400,
-      false,
-      "Something not right, please try again."
-    );
+    return global.sendResponse(res, 400, false, "Something not right, please try again.");
   }
 }
 
@@ -291,9 +213,7 @@ export async function deleteAccount(req: Request, res: Response) {
     await userHelper.delete({ _id: userId });
     // delete post
     // remove post
-    const postIds = (await Post.find({ user: userId }).select("_id")).map(
-      (post) => post._id
-    );
+    const postIds = (await Post.find({ user: userId }).select("_id")).map((post) => post._id);
     // delete post comments
     await commentHelper.deleteMany({ postId: { $in: postIds } });
     // delete post likes
@@ -309,12 +229,7 @@ export async function deleteAccount(req: Request, res: Response) {
     return global.sendResponse(res, 200, true, "Account deleted successfully.");
   } catch (error) {
     console.log(error);
-    return global.sendResponse(
-      res,
-      400,
-      false,
-      "Something not right, please try again."
-    );
+    return global.sendResponse(res, 400, false, "Something not right, please try again.");
   }
 }
 // ========================================================== End User Profile Flow ==========================================================
