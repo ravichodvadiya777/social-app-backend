@@ -6,11 +6,7 @@ import Post from "../model/postModel";
 // Define helper functions to interact with the database
 const postHelper = {
   // Data find
-  find: async (
-    query?: { user?: Types.ObjectId },
-    select?: string,
-    sort: string = "createdAt"
-  ) => {
+  find: async (query?: { user?: Types.ObjectId }, select?: string, sort: string = "createdAt") => {
     try {
       let queryBuilder = Post.find(query);
 
@@ -46,12 +42,137 @@ const postHelper = {
     }
   },
 
-  insertOne: async (data: {
-    title?: string;
-    description?: string;
-    photos: { url: string; type: string }[];
-    mention: string[];
-  }) => {
+  postById: async (query?: { _id: Types.ObjectId }, loginUserId?: Types.ObjectId) => {
+    try {
+      const post = Post.aggregate([
+        {
+          $match: query,
+        },
+        {
+          $lookup: {
+            from: "likes",
+            localField: "_id",
+            foreignField: "itemId",
+            as: "like",
+          },
+        },
+        {
+          $lookup: {
+            from: "comments",
+            localField: "_id",
+            foreignField: "postId",
+            as: "comment",
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "user",
+            foreignField: "_id",
+            as: "user",
+            pipeline: [
+              {
+                $project: {
+                  username: 1,
+                  profileImg: 1,
+                  city: 1,
+                  country: 1,
+                  mention: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $addFields: {
+            isLike: {
+              $cond: {
+                if: {
+                  $anyElementTrue: {
+                    $map: {
+                      input: "$like",
+                      as: "likeItem",
+                      in: {
+                        $eq: ["$$likeItem.user", loginUserId],
+                      },
+                    },
+                  },
+                },
+                then: true,
+                else: false,
+              },
+            },
+          },
+        },
+        {
+          $addFields: {
+            like: {
+              $size: "$like",
+            },
+            comment: {
+              $size: "$comment",
+            },
+            user: {
+              $first: "$user",
+            },
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "mention",
+            foreignField: "_id",
+            as: "mentionedUsers",
+            pipeline: [
+              {
+                $project: {
+                  username: 1,
+                  profileImg: 1,
+                  name: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $group: {
+            _id: "$_id",
+            description: {
+              $last: "$description",
+            },
+            photos: {
+              $last: "$photos",
+            },
+            user: {
+              $last: "$user",
+            },
+            mentionedUsers: {
+              $last: "$mentionedUsers",
+            },
+            like: {
+              $last: "$like",
+            },
+            comment: {
+              $last: "$comment",
+            },
+            isLike: {
+              $last: "$isLike",
+            },
+            createdAt: {
+              $last: "$createdAt",
+            },
+          },
+        },
+      ]);
+
+      return post;
+    } catch (error) {
+      console.error("Error retrieving post:", error);
+      throw error;
+    }
+  },
+
+  insertOne: async (data: { title?: string; description?: string; photos: { url: string; type: string }[]; mention: string[] }) => {
     try {
       const result = await Post.create(data);
       return result;
@@ -117,11 +238,7 @@ const postHelper = {
     }
   },
 
-  getAllPost: async (
-    loginUserId?: Types.ObjectId,
-    startIndex?: number,
-    limit?: number
-  ) => {
+  getAllPost: async (loginUserId?: Types.ObjectId, startIndex?: number, limit?: number) => {
     try {
       const post = await Post.aggregate([
         {
@@ -242,11 +359,7 @@ const postHelper = {
         {
           $facet: {
             totalRecord: [{ $count: "total" }],
-            data: [
-              { $sort: { createdAt: -1 } },
-              { $skip: startIndex },
-              { $limit: limit },
-            ],
+            data: [{ $sort: { createdAt: -1 } }, { $skip: startIndex }, { $limit: limit }],
           },
         },
         {
@@ -259,11 +372,7 @@ const postHelper = {
     }
   },
 
-  getPostByUserId: async (
-    query?: { user?: Types.ObjectId },
-    startIndex?: number,
-    limit?: number
-  ) => {
+  getPostByUserId: async (query?: { user?: Types.ObjectId }, startIndex?: number, limit?: number) => {
     try {
       const post = await Post.aggregate([
         {
@@ -387,11 +496,7 @@ const postHelper = {
         {
           $facet: {
             totalRecord: [{ $count: "total" }],
-            data: [
-              { $sort: { createdAt: -1 } },
-              { $skip: startIndex },
-              { $limit: limit },
-            ],
+            data: [{ $sort: { createdAt: -1 } }, { $skip: startIndex }, { $limit: limit }],
           },
         },
         {

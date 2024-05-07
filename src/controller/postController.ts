@@ -70,8 +70,8 @@ export async function getPostById(req: Request, res: Response) {
   try {
     const postId = new Types.ObjectId(req.params.id);
     // console.log(postId);
-    const post = await postHelper.findOne({ _id: postId });
-    return global.sendResponse(res, 200, true, "Get Post successfully.", post);
+    const post = await postHelper.postById({ _id: postId }, new Types.ObjectId(req.user._id));
+    return global.sendResponse(res, 200, true, "Get Post successfully.", post[0]);
   } catch (error) {
     console.log(error);
     return global.sendResponse(res, 400, false, "Something not right, please try again.");
