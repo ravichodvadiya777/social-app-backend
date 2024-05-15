@@ -6,6 +6,7 @@ import { NotificationType } from "../model/notificationModel";
 import postHelper from "../db/postHelper";
 import notificationHelper from "../db/notificationHelper";
 import settingHelper from "../db/settingHelper";
+import pushNotification from "../utils/pushNotification";
 
 export async function addLike(req: Request, res: Response) {
   try {
@@ -38,43 +39,81 @@ export async function addLike(req: Request, res: Response) {
       const comment = await commentHelper.findOne({ _id: commentId });
       // check comment in postId
       if (comment.postId.toString() !== postId) {
-        return global.sendResponse(res, 406, false, "This is not belong to this post.");
+        return global.sendResponse(
+          res,
+          406,
+          false,
+          "This is not belong to this post."
+        );
       }
     }
     let item;
     if (type === 1) {
-      item = await postHelper.findOne({ _id: new Types.ObjectId(postId) }, "user");
+      item = await postHelper.findOne(
+        { _id: new Types.ObjectId(postId) },
+        "user"
+      );
     } else {
-      item = await commentHelper.findOne({ _id: new Types.ObjectId(commentId) }, "user");
+      item = await commentHelper.findOne(
+        { _id: new Types.ObjectId(commentId) },
+        "user description"
+      );
     }
     const like = await likeHelper.insertOne(obj);
 
-    const likeNoti = await settingHelper.get(new Types.ObjectId(item.user.toString()));
+    const likeNoti = await settingHelper.get(
+      new Types.ObjectId(item.user.toString())
+    );
     if (req.user._id.toString() !== item.user.toString() && likeNoti.like) {
       const notificationObj: NotificationType = {
         sender: new Types.ObjectId(req.user._id),
         receiver: item.user,
         itemId: item._id,
-        text: `recently like your ${type === 1 ? "post" : "comment : {{commentDesc}}"}.`,
+        text: `recently like your ${
+          type === 1 ? "post" : "comment : {{commentDesc}}"
+        }.`,
         type: type === 1 ? "postLike" : "commentLike",
       };
+      await pushNotification(
+        `Like`,
+        `like your ${type === 1 ? "post" : "comment : " + item.description}.`,
+        {
+          _id: item._id.toString(),
+          type: "LIKE",
+        },
+        [item.user]
+      );
       await notificationHelper.insertOne(notificationObj);
     }
     return global.sendResponse(res, 201, true, "Liked Successfully", like);
   } catch (error) {
     console.log(error);
-    return global.sendResponse(res, 400, false, "Something not right, please try again.");
+    return global.sendResponse(
+      res,
+      400,
+      false,
+      "Something not right, please try again."
+    );
   }
 }
 
 export async function unlike(req: Request, res: Response) {
   try {
-    const like = await likeHelper.findOne({ itemId: new Types.ObjectId(req.params.id), user: new Types.ObjectId(req.user._id) });
+    const like = await likeHelper.findOne({
+      itemId: new Types.ObjectId(req.params.id),
+      user: new Types.ObjectId(req.user._id),
+    });
     let item;
     if (like.type === 1) {
-      item = await postHelper.findOne({ _id: new Types.ObjectId(req.params.id) }, "user");
+      item = await postHelper.findOne(
+        { _id: new Types.ObjectId(req.params.id) },
+        "user"
+      );
     } else {
-      item = await commentHelper.findOne({ _id: new Types.ObjectId(req.params.id) }, "user");
+      item = await commentHelper.findOne(
+        { _id: new Types.ObjectId(req.params.id) },
+        "user"
+      );
     }
     await likeHelper.deleteOne({ itemId: req.params.id, user: req.user._id });
     if (req.user._id.toString() !== item.user.toString()) {
@@ -89,7 +128,12 @@ export async function unlike(req: Request, res: Response) {
     return global.sendResponse(res, 200, true, "Unliked successfully");
   } catch (error) {
     console.log(error);
-    return global.sendResponse(res, 400, false, "Something not right, please try again.");
+    return global.sendResponse(
+      res,
+      400,
+      false,
+      "Something not right, please try again."
+    );
   }
 }
 
@@ -101,7 +145,12 @@ export async function getLikeById(req: Request, res: Response) {
     const limit = Number(req.query.limit) || 10;
     const startIndex = page * limit;
 
-    const getLike = await likeHelper.getLikeById(id, new Types.ObjectId(req.user._id), startIndex, limit);
+    const getLike = await likeHelper.getLikeById(
+      id,
+      new Types.ObjectId(req.user._id),
+      startIndex,
+      limit
+    );
     const pages = Math.ceil(getLike[0].totalRecord / limit);
     const hasNextPage = Number(page) < pages - 1;
     const hasPreviousPage = Number(page) > 0;
@@ -112,6 +161,11 @@ export async function getLikeById(req: Request, res: Response) {
     });
   } catch (error) {
     console.log(error);
-    return global.sendResponse(res, 400, false, "Something not right, please try again.");
+    return global.sendResponse(
+      res,
+      400,
+      false,
+      "Something not right, please try again."
+    );
   }
 }

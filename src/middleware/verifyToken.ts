@@ -14,15 +14,19 @@ export function authenticateToken(
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
   if (token) {
-    jwt.verify(token, process.env.JWT_SECRET_KEY, async (err: Error, user) => {
-      if (err) return global.sendResponse(res, 401, false, err.message);
-      const existUser = await User.findById(user.id);
-      if (!existUser)
-        return global.sendResponse(res, 401, false, "User not found");
+    jwt.verify(
+      token,
+      process.env.JWT_SECRET_KEY,
+      async (err: Error, user: { id: string }) => {
+        if (err) return global.sendResponse(res, 401, false, err.message);
+        const existUser = await User.findById(user.id);
+        if (!existUser)
+          return global.sendResponse(res, 401, false, "User not found");
 
-      req.user = existUser;
-      next();
-    });
+        req.user = existUser;
+        next();
+      }
+    );
   } else next();
 }
 
