@@ -69,9 +69,7 @@ export async function addLike(req: Request, res: Response) {
         sender: new Types.ObjectId(req.user._id),
         receiver: item.user,
         itemId: item._id,
-        text: `recently like your ${
-          type === 1 ? "post" : "comment : {{commentDesc}}"
-        }.`,
+        text: `like your ${type === 1 ? "post" : "comment : {{commentDesc}}"}.`,
         type: type === 1 ? "postLike" : "commentLike",
       };
       await pushNotification(

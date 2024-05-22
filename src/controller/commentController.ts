@@ -43,7 +43,7 @@ export async function addComment(req: Request, res: Response) {
         sender: new Types.ObjectId(req.user._id),
         receiver: post.user,
         itemId: new Types.ObjectId(postId),
-        text: "recently comment on your post.",
+        text: "comment on your post.",
         type: "comment",
       };
       await pushNotification(
