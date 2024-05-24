@@ -149,6 +149,17 @@ io.on("connection", (socket) => {
     io.to(data.to._id).emit("callAccepted", data.signal);
   });
 
+  socket.on("screenShare", (data) => {
+    console.log("screenStream", data);
+    // Relay the screenShare event to the intended recipient
+    io.to(data.to).emit("screenShare", data);
+  });
+
+  socket.on("screenShareEnd", (data) => {
+    // Relay the screenShareEnd event to the intended recipient
+    io.to(data.to).emit("screenShareEnd");
+  });
+
   socket.on("disconnect", () => {
     console.log("disconnect");
     const user = socketUsers.get(socket.id);
