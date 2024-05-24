@@ -18,11 +18,13 @@ import "./db/db";
 import chatSettingHelper from "./db/chatSettingHelper";
 import userHelper from "./db/userHelper";
 import "./cron";
+import pushNotification from "./utils/pushNotification";
+import User from "./model/userModel";
 
 const cors_urls = [
   "http://localhost:3000",
   "http://localhost:3001",
-  "https://qddfgq51-4001.inc1.devtunnels.ms",
+  "https://qddfgq51-3000.inc1.devtunnels.ms",
 ];
 
 app.use(
@@ -125,17 +127,37 @@ io.on("connection", (socket) => {
       .emit("typing", { typing: data.typing });
   });
 
-  socket.on("callRequest", (data) => {
-    console.log(data);
+  socket.on("callRequest", async (data) => {
     socket.to(data.to._id).emit("sendCallRequest", {
       to: data.from,
       from: data.to,
-      signal: data.signalData,
+      signal: data.signal,
     });
+    const user = await User.findById(data.to._id);
+    pushNotification(
+      `Incoming call`,
+      `${user.username} calling you...`,
+      {
+        type: "INCOMING CALL",
+      },
+      [data.to._id.toString()]
+    );
   });
 
   socket.on("answerCall", (data) => {
-    console.log(data);
+    console.log("answerCall", data.to._id);
+    io.to(data.to._id).emit("callAccepted", data.signal);
+  });
+
+  socket.on("screenShare", (data) => {
+    console.log("screenStream", data);
+    // Relay the screenShare event to the intended recipient
+    io.to(data.to).emit("screenShare", data);
+  });
+
+  socket.on("screenShareEnd", (data) => {
+    // Relay the screenShareEnd event to the intended recipient
+    io.to(data.to).emit("screenShareEnd");
   });
 
   socket.on("disconnect", () => {

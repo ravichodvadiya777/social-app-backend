@@ -71,8 +71,24 @@ const notificationHelper = {
             as: "comment",
             pipeline: [
               {
+                $lookup: {
+                  from: "posts",
+                  localField: "postId",
+                  foreignField: "_id",
+                  as: "post",
+                  pipeline: [
+                    {
+                      $project: {
+                        photos: 1,
+                      },
+                    },
+                  ],
+                },
+              },
+              {
                 $project: {
                   description: 1,
+                  post: { $first: "$post" },
                 },
               },
             ],
@@ -98,6 +114,13 @@ const notificationHelper = {
         },
         {
           $addFields: {
+            post: {
+              $cond: ["$comment", "$comment.post", "$post"],
+            },
+          },
+        },
+        {
+          $addFields: {
             text: {
               $replaceAll: {
                 input: "$text",
@@ -112,7 +135,11 @@ const notificationHelper = {
         {
           $facet: {
             totalRecord: [{ $count: "total" }],
-            data: [{ $sort: { createdAt: -1 } }, { $skip: limit * page }, { $limit: limit }],
+            data: [
+              { $sort: { createdAt: -1 } },
+              { $skip: limit * page },
+              { $limit: limit },
+            ],
           },
         },
         {
@@ -128,7 +155,10 @@ const notificationHelper = {
 
   getCount: async (user: Types.ObjectId) => {
     try {
-      const result = await Notification.countDocuments({ receiver: user, read: false });
+      const result = await Notification.countDocuments({
+        receiver: user,
+        read: false,
+      });
       return result;
     } catch (error) {
       console.error("Error get notification:", error);
@@ -138,7 +168,10 @@ const notificationHelper = {
 
   patch: async (user: Types.ObjectId) => {
     try {
-      const result = await Notification.updateMany({ receiver: user, read: false }, { $set: { read: true } });
+      const result = await Notification.updateMany(
+        { receiver: user, read: false },
+        { $set: { read: true } }
+      );
       return result;
     } catch (error) {
       console.error("Error get notification:", error);
